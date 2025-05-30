@@ -1,0 +1,48 @@
+{
+  "name": "@animo-id/eudi-wallet-functionality",
+  "description": "Animo Mdoc and MDL",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.12.3+sha256.24235772cc4ac82a62627cd47f834c72667a2ce87799a846ec4e8e555e2d4b8b",
+  "author": "Animo Solutions",
+  "exports": "./src/index.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "import": "./dist/index.mjs",
+        "require": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/animo/mdoc"
+  },
+  "scripts": {
+    "types:check": "tsc --noEmit",
+    "style:check": "biome check --unsafe",
+    "style:fix": "biome check --write --unsafe",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean --sourcemap",
+    "release": "pnpm build && pnpm changeset publish --no-git-tag",
+    "changeset-version": "pnpm changeset version && pnpm style:fix"
+  },
+  "peerDependencies": {
+    "@credo-ts/core": "*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^2.29.4",
+    "tsup": "^8.5.0",
+    "typescript": "~5.8.3"
+  },
+  "dependencies": {
+    "@credo-ts/openid4vc": "^0.5.15",
+    "zod": "^3.25.42"
+  }
+}
