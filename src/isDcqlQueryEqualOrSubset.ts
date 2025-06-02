@@ -1,33 +1,13 @@
-import { type AgentContext, deepEquality, equalsIgnoreOrder, equalsWithOrder } from '@credo-ts/core'
+import { type DcqlQuery, equalsIgnoreOrder, equalsWithOrder } from '@credo-ts/core'
 
-export function isDcqlQueryEqualOrSubset(
-  agentContext: AgentContext,
-  // @ts-ignore
-  arq: DcqlQuery,
-  // @ts-ignore
-  rcq: DcqlQuery
-): boolean {
-  const dcqlService = agentContext.resolve(DcqlService)
-  dcqlService.validateDcqlQuery(arq)
-  // TODO: validate required the `id` property, which is not in the rcq
-  // const rcqQuery = dcqlService.validateDcqlQuery(arq)
-
+export function isDcqlQueryEqualOrSubset(arq: DcqlQuery, rcq: DcqlQuery): boolean {
   if (rcq.credential_sets) {
-    agentContext.config.logger.warn(
-      'credential_sets are not allowed on the dcql query for the registration certificate'
-    )
     return false
   }
 
   if (rcq.credentials.some((c) => c.id)) {
-    agentContext.config.logger.warn(
-      'credentials[n].id is not allowed on the dcql query for the registration certificate'
-    )
     return false
   }
-
-  // Short-circuit for exact match
-  if (deepEquality(arq.credentials, rcq.credentials)) return true
 
   // only sd-jwt and mdoc are supported
   if (arq.credentials.some((c) => c.format !== 'mso_mdoc' && c.format !== 'vc+sd-jwt' && c.format !== 'dc+sd-jwt')) {
