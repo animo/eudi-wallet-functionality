@@ -1,1 +1,1 @@
-export { verifyAuthorizationRequest } from './verifyAuthorizationRequestCallback'
+export { verifyOpenid4VpAuthorizationRequest } from './verifyOpenid4VpAuthorizationRequest'
