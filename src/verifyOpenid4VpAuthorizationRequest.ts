@@ -32,19 +32,24 @@ export const verifyOpenid4VpAuthorizationRequest = async (
 
       let isValidButUntrusted = false
       let isValidAndTrusted = false
-      if (allowUntrustedSigned) {
-        const jwt = Jwt.fromSerializedJwt(va.data)
-        const { isValid } = await jwsService.verifyJws(agentContext, {
-          jws: va.data,
-          trustedCertificates: jwt.header.x5c ?? [],
-        })
-        isValidButUntrusted = isValid
-      } else {
-        const { isValid } = await jwsService.verifyJws(agentContext, { jws: va.data, trustedCertificates })
-        isValidAndTrusted = isValid
-      }
 
       const jwt = Jwt.fromSerializedJwt(va.data)
+
+      try {
+        const { isValid } = await jwsService.verifyJws(agentContext, {
+          jws: va.data,
+          trustedCertificates,
+        })
+        isValidAndTrusted = isValid
+      } catch {
+        if (allowUntrustedSigned) {
+          const { isValid } = await jwsService.verifyJws(agentContext, {
+            jws: va.data,
+            trustedCertificates: jwt.header.x5c ?? [],
+          })
+          isValidButUntrusted = isValid
+        }
+      }
 
       if (jwt.header.typ !== 'rc-rp+jwt') {
         throw new Error(`only 'rc-rp+jwt' is supported as header typ. Request included: ${jwt.header.typ}`)

@@ -1,11 +1,11 @@
-import { doesNotReject, ok, rejects } from 'node:assert'
+import { doesNotReject, equal, ok, rejects } from 'node:assert'
 import { after, before, beforeEach, suite, test } from 'node:test'
 import { AskarModule } from '@credo-ts/askar'
 import { Agent } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcHolderModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
-import { verifyAuthorizationRequest } from '../src'
+import { verifyOpenid4VpAuthorizationRequest } from '../src'
 
 const trustedCertificates = [
   `-----BEGIN CERTIFICATE-----
@@ -25,7 +25,7 @@ const modules = {
   oid4vc: new OpenId4VcHolderModule(),
 }
 
-suite('verify authorization request', () => {
+suite('verify openid4vp authorization request', () => {
   suite('According to https://funke-wallet.de', () => {
     let agent: Agent<typeof modules>
 
@@ -56,7 +56,30 @@ suite('verify authorization request', () => {
         trustedCertificates,
       })
 
-      doesNotReject(verifyAuthorizationRequest(agent.context, request, trustedCertificates))
+      const result = await verifyOpenid4VpAuthorizationRequest(agent.context, {
+        resolvedAuthorizationRequest: request,
+        trustedCertificates,
+      })
+
+      equal(result?.[0].isValidAndTrusted, true)
+      equal(result?.[0].isValidButUntrusted, false)
+    })
+
+    test('Successfully verify: draft-24, valid request, dcql, allow all certificates', async () => {
+      const authorizationRequestUrl =
+        'openid4vp://?client_id=x509_san_dns%3Afunke-wallet.de&request_uri=https%3A%2F%2Ffunke-wallet.de%2Foid4vp%2Fdraft-24%2Fvalid-request%2Fdcql'
+
+      const request = await agent.modules.oid4vc.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
+        trustedCertificates,
+      })
+
+      const result = await verifyOpenid4VpAuthorizationRequest(agent.context, {
+        resolvedAuthorizationRequest: request,
+        allowUntrustedSigned: true,
+      })
+
+      equal(result?.[0].isValidAndTrusted, false)
+      equal(result?.[0].isValidButUntrusted, true)
     })
 
     test('Fail verify: draft-24, valid request, pex', async () => {
@@ -67,7 +90,12 @@ suite('verify authorization request', () => {
         trustedCertificates,
       })
 
-      rejects(verifyAuthorizationRequest(agent.context, request, trustedCertificates))
+      await rejects(
+        verifyOpenid4VpAuthorizationRequest(agent.context, {
+          resolvedAuthorizationRequest: request,
+          trustedCertificates,
+        })
+      )
     })
 
     test('Fail verify: draft-24, overasking, dcql', async () => {
@@ -78,7 +106,12 @@ suite('verify authorization request', () => {
         trustedCertificates,
       })
 
-      rejects(verifyAuthorizationRequest(agent.context, request, trustedCertificates))
+      await rejects(
+        verifyOpenid4VpAuthorizationRequest(agent.context, {
+          resolvedAuthorizationRequest: request,
+          trustedCertificates,
+        })
+      )
     })
   })
 })
