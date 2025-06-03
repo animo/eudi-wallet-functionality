@@ -176,7 +176,7 @@ export const verifyOpenid4VpAuthorizationRequest = async (
         )
       }
 
-      results.push({ isValidButUntrusted, isValidAndTrusted })
+      results.push({ isValidButUntrusted, isValidAndTrusted, x509RegistrationCertificate: rpCert })
     } else {
       throw new Error(`only format of 'jwt' is supported`)
     }
