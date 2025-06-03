@@ -29,20 +29,28 @@
     "style:check": "biome check --unsafe",
     "style:fix": "biome check --write --unsafe",
     "build": "tsup src/index.ts --format cjs,esm --dts --clean --sourcemap",
+    "test": "node --import tsx --test tests/*.test.ts",
     "release": "pnpm build && pnpm changeset publish --no-git-tag",
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
   "peerDependencies": {
-    "@credo-ts/core": "*"
+    "@credo-ts/core": "*",
+    "@credo-ts/openid4vc": "*"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.4",
+    "@credo-ts/askar": "0.6.0-alpha-20250602122957",
+    "@credo-ts/core": "0.6.0-alpha-20250602122957",
+    "@credo-ts/node": "0.6.0-alpha-20250602122957",
+    "@credo-ts/openid4vc": "0.6.0-alpha-20250602122957",
+    "@openwallet-foundation/askar-nodejs": "^0.3.2",
+    "@types/node": "^22.15.29",
     "tsup": "^8.5.0",
+    "tsx": "^4.19.4",
     "typescript": "~5.8.3"
   },
   "dependencies": {
-    "@credo-ts/openid4vc": "^0.5.15",
     "zod": "^3.25.42"
   }
 }

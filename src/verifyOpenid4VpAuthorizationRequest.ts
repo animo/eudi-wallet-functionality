@@ -1,13 +1,24 @@
-import { JwsService, Jwt, X509Certificate } from '@credo-ts/core'
+import { allowedNodeEnvironmentFlags } from 'node:process'
+import { type AgentContext, type DcqlQuery, JwsService, Jwt, X509Certificate } from '@credo-ts/core'
+import type { OpenId4VpResolvedAuthorizationRequest } from '@credo-ts/openid4vc'
 import z from 'zod'
 import { isDcqlQueryEqualOrSubset } from './isDcqlQueryEqualOrSubset'
 
-export const verifyAuthorizationRequestCallback = async ({
-  agentContext,
-  authorizationRequestPayload,
-  signedAuthorizationRequest,
-  // @ts-ignore
-}: VerifyAuthorizationRequestOptions) => {
+export type VerifyAuthorizationRequestOptions = {
+  resolvedAuthorizationRequest: OpenId4VpResolvedAuthorizationRequest
+  trustedCertificates?: Array<string>
+  allowUntrustedSigned?: boolean
+}
+
+export const verifyOpenid4VpAuthorizationRequest = async (
+  agentContext: AgentContext,
+  {
+    resolvedAuthorizationRequest: { authorizationRequestPayload, signedAuthorizationRequest, dcql },
+    trustedCertificates,
+    allowUntrustedSigned,
+  }: VerifyAuthorizationRequestOptions
+) => {
+  const results = []
   if (!authorizationRequestPayload.verifier_attestations) return
   for (const va of authorizationRequestPayload.verifier_attestations) {
     // Here we verify it as a registration certificate according to
@@ -18,11 +29,26 @@ export const verifyAuthorizationRequestCallback = async ({
       }
 
       const jwsService = agentContext.resolve(JwsService)
-      const { isValid } = await jwsService.verifyJws(agentContext, { jws: va.data })
+
+      let isValidButUntrusted = false
+      let isValidAndTrusted = false
+
       const jwt = Jwt.fromSerializedJwt(va.data)
 
-      if (!isValid) {
-        throw new Error('Invalid signature on JWT provided in the verifier_attestations')
+      try {
+        const { isValid } = await jwsService.verifyJws(agentContext, {
+          jws: va.data,
+          trustedCertificates,
+        })
+        isValidAndTrusted = isValid
+      } catch {
+        if (allowUntrustedSigned) {
+          const { isValid } = await jwsService.verifyJws(agentContext, {
+            jws: va.data,
+            trustedCertificates: jwt.header.x5c ?? [],
+          })
+          isValidButUntrusted = isValid
+        }
       }
 
       if (jwt.header.typ !== 'rc-rp+jwt') {
@@ -131,7 +157,7 @@ export const verifyAuthorizationRequestCallback = async ({
 
       // TODO: check the status of the registration certificate
 
-      if (!authorizationRequestPayload.dcql_query) {
+      if (!dcql) {
         throw new Error('DCQL must be used when working registration certificates')
       }
 
@@ -142,20 +168,18 @@ export const verifyAuthorizationRequestCallback = async ({
         throw new Error('Presentation Exchange is not supported for the registration certificate')
       }
 
-      const isValidDcqlQuery = isDcqlQueryEqualOrSubset(
-        agentContext,
-        // TODO: why is this cast needed
-        authorizationRequestPayload.dcql_query as DcqlQuery,
-        parsedPayload as unknown as DcqlQuery
-      )
+      const isValidDcqlQuery = isDcqlQueryEqualOrSubset(dcql.queryResult, parsedPayload as unknown as DcqlQuery)
 
       if (!isValidDcqlQuery) {
         throw new Error(
           'DCQL query in the authorization request is not equal or a valid subset of the DCQl query provided in the registration certificate'
         )
       }
+
+      results.push({ isValidButUntrusted, isValidAndTrusted })
     } else {
       throw new Error(`only format of 'jwt' is supported`)
     }
   }
+  return results
 }
