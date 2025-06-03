@@ -1,6 +1,6 @@
 {
   "name": "@animo-id/eudi-wallet-functionality",
-  "description": "Animo Mdoc and MDL",
+  "description": "EUDI Wallet Functionality",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "packageManager": "pnpm@9.12.3+sha256.24235772cc4ac82a62627cd47f834c72667a2ce87799a846ec4e8e555e2d4b8b",
@@ -8,6 +8,7 @@
   "exports": "./src/index.ts",
   "files": ["dist"],
   "publishConfig": {
+    "access": "public",
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
     "types": "./dist/index.d.ts",
@@ -22,7 +23,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/animo/mdoc"
+    "url": "https://github.com/animo/eudi-wallet-functionality"
   },
   "scripts": {
     "types:check": "tsc --noEmit",
