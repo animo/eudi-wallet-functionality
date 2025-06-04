@@ -1,7 +1,7 @@
 {
   "name": "@animo-id/eudi-wallet-functionality",
   "description": "EUDI Wallet Functionality",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "Apache-2.0",
   "packageManager": "pnpm@9.12.3+sha256.24235772cc4ac82a62627cd47f834c72667a2ce87799a846ec4e8e555e2d4b8b",
   "author": "Animo Solutions",
