@@ -1,4 +1,3 @@
-import { allowedNodeEnvironmentFlags } from 'node:process'
 import { type AgentContext, type DcqlQuery, JwsService, Jwt, X509Certificate } from '@credo-ts/core'
 import type { OpenId4VpResolvedAuthorizationRequest } from '@credo-ts/openid4vc'
 import z from 'zod'
@@ -28,7 +27,7 @@ export const verifyOpenid4VpAuthorizationRequest = async (
         throw new Error('Only inline JWTs are supported')
       }
 
-      const jwsService = agentContext.resolve(JwsService)
+      const jwsService = agentContext.dependencyManager.resolve(JwsService)
 
       let isValidButUntrusted = false
       let isValidAndTrusted = false
