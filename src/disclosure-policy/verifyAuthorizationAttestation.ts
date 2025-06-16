@@ -1,8 +1,6 @@
-import { type AgentContext, JwsService, Jwt, SdJwtVcService, X509Certificate } from '@credo-ts/core'
-import type { OpenId4VpResolvedAuthorizationRequest } from '@credo-ts/openid4vc'
+import { type AgentContext, JwsService, Jwt, SdJwtVcService, type X509Certificate } from '@credo-ts/core'
 import { z } from 'zod'
 import { isRegistrationCertificate } from '../registration-certificate/verifyRegistrationCertificate'
-import { getAuthorizationDisclosurePolicy } from './getAuthorizationDisclosurePolicy'
 
 // TODO: support multiple authorization attestation formats.
 //       Currently, only sd-jwt is defined
@@ -47,7 +45,7 @@ export const isAuthorizationAttestation = (format: string, jwt: string) => {
 
 export type VerifyAuthorizationAttestationOptions = {
   authorizationAttestation: string
-  resolvedAuthorizationRequest: OpenId4VpResolvedAuthorizationRequest
+  accessCertificate: X509Certificate
   trustedCertificates?: Array<string>
   allowUntrustedSigned?: boolean
 }
@@ -56,7 +54,7 @@ export const verifyAuthorizationAttestation = async (
   agentContext: AgentContext,
   {
     authorizationAttestation,
-    resolvedAuthorizationRequest: { signedAuthorizationRequest },
+    accessCertificate,
     allowUntrustedSigned,
     trustedCertificates,
   }: VerifyAuthorizationAttestationOptions
@@ -85,17 +83,6 @@ export const verifyAuthorizationAttestation = async (
     }
   }
 
-  if (!signedAuthorizationRequest) {
-    throw new Error('Authorization request must be signed for the authorization attestation')
-  }
-
-  if (signedAuthorizationRequest.signer.method !== 'x5c') {
-    throw new Error(
-      'x5c is only supported for key derivation on the authorization request containing a authorization attestation'
-    )
-  }
-  const accessCertificate = X509Certificate.fromEncodedCertificate(signedAuthorizationRequest.signer.x5c[0])
-
   authorizationAttestationHeaderSchema.parse(jwt.header)
   const payload = authorizationAttestationPayloadSchema.parse(jwt.payload)
 
@@ -105,21 +92,12 @@ export const verifyAuthorizationAttestation = async (
 
   // TODO: confirm that the `signingCertificate.subject` is the DN of the RP
   if (payload.sub !== accessCertificate.subject) {
-    throw new Error('The Subject of the Authorization Attestation should equal the distinguished of the Relying Party')
+    return false
   }
 
-  const { isValid, verification } = await sdJwtService.verify(agentContext, {
+  const { isValid } = await sdJwtService.verify(agentContext, {
     compactSdJwtVc: authorizationAttestation,
   })
 
-  if (!isValid) {
-    throw new Error(
-      `Could not verify the sd-jwt authorization attestation. Verifications that failed at '${Object.values(
-        verification
-      )
-        .filter(([, value]) => !value)
-        .map(([key]) => key)
-        .join(', ')}'`
-    )
-  }
+  return isValid
 }
