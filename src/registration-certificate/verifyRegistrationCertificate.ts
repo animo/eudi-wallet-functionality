@@ -86,7 +86,9 @@ const registrationCertificatePayloadSchema = z
   })
   .passthrough()
 
-export const isRegistrationCertificate = (agentContext: AgentContext, jwt: string) => {
+export const isRegistrationCertificate = (format: string, jwt: string) => {
+  if (format !== 'jwt') return false
+
   try {
     const { header } = Jwt.fromSerializedJwt(jwt)
 
