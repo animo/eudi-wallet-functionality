@@ -18,15 +18,15 @@ export const verifyRegistrationCertificateInOpenid4VpAuthorizationRequest = asyn
   agentContext: AgentContext,
   { resolvedAuthorizationRequest, trustedCertificates, allowUntrustedSigned }: VerifyAuthorizationRequestOptions
 ) => {
-  let registrationCertificate: Awaited<ReturnType<typeof verifyIfRegistrationCertificate>> | undefined
+  let registrationCertificateResult: Awaited<ReturnType<typeof verifyIfRegistrationCertificate>> | undefined
   if (!resolvedAuthorizationRequest.authorizationRequestPayload.verifier_attestations) return
   for (const va of resolvedAuthorizationRequest.authorizationRequestPayload.verifier_attestations) {
     if (typeof va.data !== 'string') {
-      throw new Error('Only inline data supported')
+      throw new Error('Authorization Attestations of string are currently only supported')
     }
 
     if (isRegistrationCertificate(va.format, va.data)) {
-      registrationCertificate = await verifyIfRegistrationCertificate(agentContext, {
+      registrationCertificateResult = await verifyIfRegistrationCertificate(agentContext, {
         registrationCertificate: va.data,
         resolvedAuthorizationRequest,
         allowUntrustedSigned,
@@ -34,5 +34,5 @@ export const verifyRegistrationCertificateInOpenid4VpAuthorizationRequest = asyn
       })
     }
   }
-  return registrationCertificate
+  return registrationCertificateResult
 }

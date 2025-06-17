@@ -1,4 +1,4 @@
-import { type AgentContext, type DcqlQuery, JwsService, Jwt, X509Certificate } from '@credo-ts/core'
+import { type AgentContext, CredoError, type DcqlQuery, JwsService, Jwt, X509Certificate } from '@credo-ts/core'
 import type { OpenId4VpResolvedAuthorizationRequest } from '@credo-ts/openid4vc'
 import { z } from 'zod'
 import { isDcqlQueryEqualOrSubset } from './isDcqlQueryEqualOrSubset'
@@ -90,15 +90,23 @@ export const isRegistrationCertificate = (format: string, jwt: string) => {
   if (format !== 'jwt') return false
 
   try {
-    const { header } = Jwt.fromSerializedJwt(jwt)
-
-    if (header.typ !== 'rc-rp+jwt') {
-      return true
-    }
-    return false
+    const {
+      header: { typ },
+    } = Jwt.fromSerializedJwt(jwt)
+    return typ === 'rc-rp+jwt'
   } catch {
     return false
   }
+}
+
+export type VerifyIfRegistrationCertificateReturnContext = {
+  isValid: boolean
+  isSignedWithX509?: boolean
+  isAccessCertificateSubjectEqualToRegistrationCertificate?: boolean
+  isTimestampValid?: boolean
+  isJwsValid?: boolean
+  isRegistrationCertificateQueryEqualOrSubsetOfAuthorizationRequestQuery?: boolean
+  isDcqlUsed?: boolean
 }
 
 /**
@@ -116,36 +124,59 @@ export const verifyIfRegistrationCertificate = async (
     allowUntrustedSigned,
     resolvedAuthorizationRequest: { signedAuthorizationRequest, authorizationRequestPayload, dcql },
   }: VerifyRegistrationCertificateOptions
-) => {
-  const jwsService = agentContext.dependencyManager.resolve(JwsService)
+): Promise<VerifyIfRegistrationCertificateReturnContext> => {
+  if ((!trustedCertificates || trustedCertificates.length === 0) && !allowUntrustedSigned) {
+    throw new Error('Either provide trusted certificates, or allow for untrusted signers')
+  }
 
-  let isValidButUntrusted = false
-  let isValidAndTrusted = false
+  const returnContext: VerifyIfRegistrationCertificateReturnContext = {
+    isValid: true,
+  }
 
-  const jwt = Jwt.fromSerializedJwt(registrationCertificate)
-
-  try {
-    const { isValid } = await jwsService.verifyJws(agentContext, {
-      jws: registrationCertificate,
-      trustedCertificates,
-    })
-    isValidAndTrusted = isValid
-  } catch {
-    if (allowUntrustedSigned) {
-      const { isValid } = await jwsService.verifyJws(agentContext, {
-        jws: registrationCertificate,
-        trustedCertificates: jwt.header.x5c ?? [],
-      })
-      isValidButUntrusted = isValid
+  if (
+    !dcql ||
+    authorizationRequestPayload.presentation_definition ||
+    authorizationRequestPayload.presentation_definition_uri
+  ) {
+    return {
+      isValid: false,
+      isDcqlUsed: false,
     }
   }
 
-  if (!signedAuthorizationRequest) {
-    throw new Error('Request must be signed for the registration certificate')
+  if (signedAuthorizationRequest?.signer.method !== 'x5c') {
+    return {
+      isValid: false,
+      isSignedWithX509: false,
+    }
   }
 
-  if (signedAuthorizationRequest.signer.method !== 'x5c') {
-    throw new Error('x5c is only supported for registration certificate')
+  const jwsService = agentContext.dependencyManager.resolve(JwsService)
+
+  const jwt = Jwt.fromSerializedJwt(registrationCertificate)
+
+  const verifySignature = async (certs: Array<string>) => {
+    const { isValid } = await jwsService.verifyJws(agentContext, {
+      jws: registrationCertificate,
+      trustedCertificates: certs,
+    })
+    return isValid
+  }
+
+  try {
+    let isValid = true
+    if (allowUntrustedSigned) {
+      isValid = await verifySignature([...(trustedCertificates ?? []), ...(jwt.header.x5c ?? [])])
+    } else {
+      isValid = await verifySignature(trustedCertificates ?? [])
+    }
+    if (!isValid) {
+      returnContext.isValid = false
+      returnContext.isJwsValid = false
+    }
+  } catch {
+    returnContext.isValid = false
+    returnContext.isJwsValid = false
   }
 
   registrationCertificateHeaderSchema.parse(jwt.header)
@@ -155,32 +186,22 @@ export const verifyIfRegistrationCertificate = async (
   const rpCert = X509Certificate.fromEncodedCertificate(rpCertEncoded)
 
   if (rpCert.subject !== parsedPayload.sub) {
-    throw new Error(
-      `Subject in the certificate of the auth request: '${rpCert.subject}' is not equal to the subject of the registration certificate: '${parsedPayload.sub}'`
-    )
+    returnContext.isAccessCertificateSubjectEqualToRegistrationCertificate = false
+    returnContext.isValid = false
   }
 
   if (parsedPayload.iat && new Date().getTime() / 1000 <= parsedPayload.iat) {
-    throw new Error('Issued at timestamp of the registration certificate is in the future')
+    returnContext.isTimestampValid = false
+    returnContext.isValid = false
   }
 
   // TODO: check the status of the registration certificate
 
-  if (!dcql) {
-    throw new Error('DCQL must be used when working registration certificates')
-  }
-
-  if (authorizationRequestPayload.presentation_definition || authorizationRequestPayload.presentation_definition_uri) {
-    throw new Error('Presentation Exchange is not supported for the registration certificate')
-  }
-
   const isValidDcqlQuery = isDcqlQueryEqualOrSubset(dcql.queryResult, parsedPayload as unknown as DcqlQuery)
-
   if (!isValidDcqlQuery) {
-    throw new Error(
-      'DCQL query in the authorization request is not equal or a valid subset of the DCQl query provided in the registration certificate'
-    )
+    returnContext.isValid = false
+    returnContext.isRegistrationCertificateQueryEqualOrSubsetOfAuthorizationRequestQuery = false
   }
 
-  return { isValidButUntrusted, isValidAndTrusted, x509RegistrationCertificate: rpCert }
+  return returnContext
 }

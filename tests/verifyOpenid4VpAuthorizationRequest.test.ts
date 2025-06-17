@@ -1,11 +1,11 @@
-import { doesNotReject, equal, ok, rejects } from 'node:assert'
+import { equal, ok, rejects, strictEqual } from 'node:assert'
 import { after, before, beforeEach, suite, test } from 'node:test'
 import { AskarModule } from '@credo-ts/askar'
 import { Agent } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
 import { OpenId4VcHolderModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
-import { verifyOpenid4VpAuthorizationRequest } from '../src'
+import { verifyRegistrationCertificateInOpenid4VpAuthorizationRequest } from '../src'
 
 const trustedCertificates = [
   `-----BEGIN CERTIFICATE-----
@@ -56,13 +56,12 @@ suite('verify openid4vp authorization request', () => {
         trustedCertificates,
       })
 
-      const result = await verifyOpenid4VpAuthorizationRequest(agent.context, {
+      const result = await verifyRegistrationCertificateInOpenid4VpAuthorizationRequest(agent.context, {
         resolvedAuthorizationRequest: request,
         trustedCertificates,
       })
 
-      equal(result?.[0].isValidAndTrusted, true)
-      equal(result?.[0].isValidButUntrusted, false)
+      equal(result?.isValid, true)
     })
 
     test('Successfully verify: draft-24, valid request, dcql, allow all certificates', async () => {
@@ -73,13 +72,12 @@ suite('verify openid4vp authorization request', () => {
         trustedCertificates,
       })
 
-      const result = await verifyOpenid4VpAuthorizationRequest(agent.context, {
+      const result = await verifyRegistrationCertificateInOpenid4VpAuthorizationRequest(agent.context, {
         resolvedAuthorizationRequest: request,
         allowUntrustedSigned: true,
       })
 
-      equal(result?.[0].isValidAndTrusted, false)
-      equal(result?.[0].isValidButUntrusted, true)
+      equal(result?.isValid, true)
     })
 
     test('Fail verify: draft-24, valid request, pex', async () => {
@@ -91,7 +89,7 @@ suite('verify openid4vp authorization request', () => {
       })
 
       await rejects(
-        verifyOpenid4VpAuthorizationRequest(agent.context, {
+        verifyRegistrationCertificateInOpenid4VpAuthorizationRequest(agent.context, {
           resolvedAuthorizationRequest: request,
           trustedCertificates,
         })
@@ -106,12 +104,13 @@ suite('verify openid4vp authorization request', () => {
         trustedCertificates,
       })
 
-      await rejects(
-        verifyOpenid4VpAuthorizationRequest(agent.context, {
-          resolvedAuthorizationRequest: request,
-          trustedCertificates,
-        })
-      )
+      const result = await verifyRegistrationCertificateInOpenid4VpAuthorizationRequest(agent.context, {
+        resolvedAuthorizationRequest: request,
+        trustedCertificates,
+      })
+
+      strictEqual(result?.isValid, false)
+      equal(result?.isRegistrationCertificateQueryEqualOrSubsetOfAuthorizationRequestQuery, false)
     })
   })
 })
