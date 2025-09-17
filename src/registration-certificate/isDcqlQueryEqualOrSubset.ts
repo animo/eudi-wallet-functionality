@@ -1,23 +1,29 @@
 import { type DcqlQuery, equalsIgnoreOrder, equalsWithOrder } from '@credo-ts/core'
 
-export function isDcqlQueryEqualOrSubset(arq: DcqlQuery, rcq: DcqlQuery): boolean {
-  if (rcq.credential_sets) {
+/**
+ *
+ * Check whether query `lhs` is equal or a subset of `rhs`
+ *
+ */
+export function isDcqlQueryEqualOrSubset(lhs: DcqlQuery, rhs: DcqlQuery): boolean {
+  // `credential_sets` are currently not supported
+  if (rhs.credential_sets) {
     return false
   }
 
-  if (rcq.credentials.some((c) => c.id)) {
+  if (rhs.credentials.some((c) => c.id)) {
     return false
   }
 
   // only sd-jwt and mdoc are supported
-  if (arq.credentials.some((c) => c.format !== 'mso_mdoc' && c.format !== 'vc+sd-jwt' && c.format !== 'dc+sd-jwt')) {
+  if (lhs.credentials.some((c) => c.format !== 'mso_mdoc' && c.format !== 'vc+sd-jwt' && c.format !== 'dc+sd-jwt')) {
     return false
   }
 
-  credentialQueryLoop: for (const credentialQuery of arq.credentials) {
-    const matchingRcqCredentialQueriesBasedOnFormat = rcq.credentials.filter((c) => c.format === credentialQuery.format)
+  credentialQueryLoop: for (const credentialQuery of lhs.credentials) {
+    const matchingRhsCredentialQueriesBasedOnFormat = rhs.credentials.filter((c) => c.format === credentialQuery.format)
 
-    if (matchingRcqCredentialQueriesBasedOnFormat.length === 0) return false
+    if (matchingRhsCredentialQueriesBasedOnFormat.length === 0) return false
 
     switch (credentialQuery.format) {
       case 'mso_mdoc': {
@@ -25,7 +31,7 @@ export function isDcqlQueryEqualOrSubset(arq: DcqlQuery, rcq: DcqlQuery): boolea
         if (!doctypeValue) return false
         if (typeof credentialQuery.meta?.doctype_value !== 'string') return false
 
-        const foundMatchingRequests = matchingRcqCredentialQueriesBasedOnFormat.filter(
+        const foundMatchingRequests = matchingRhsCredentialQueriesBasedOnFormat.filter(
           (c): c is typeof c & { format: 'mso_mdoc' } =>
             !!(c.format === 'mso_mdoc' && c.meta && c.meta.doctype_value === doctypeValue)
         )
@@ -68,7 +74,7 @@ export function isDcqlQueryEqualOrSubset(arq: DcqlQuery, rcq: DcqlQuery): boolea
         if (!vctValues) return false
         if (credentialQuery.meta?.vct_values?.length === 0) return false
 
-        const foundMatchingRequests = matchingRcqCredentialQueriesBasedOnFormat.filter(
+        const foundMatchingRequests = matchingRhsCredentialQueriesBasedOnFormat.filter(
           (c): c is typeof c & ({ format: 'dc+sd-jwt' } | { format: 'vc+sd-jwt' }) =>
             !!(
               (c.format === 'dc+sd-jwt' || c.format === 'vc+sd-jwt') &&
