@@ -31,9 +31,7 @@ suite('verify openid4vp authorization request', () => {
 
     before(async () => {
       agent = new Agent({
-        config: {
-          label: 'Test Agent For Eudi Auth Request Verification',
-        },
+        config: {},
         modules,
         dependencies: agentDependencies,
       })
