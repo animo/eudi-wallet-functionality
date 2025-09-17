@@ -34,6 +34,11 @@
     "release": "pnpm build && pnpm changeset publish --no-git-tag",
     "changeset-version": "pnpm changeset version && pnpm style:fix"
   },
+  "pnpm": {
+    "patchedDependencies": {
+      "@openid4vc/openid4vp": "patches/@openid4vc__openid4vp.patch"
+    }
+  },
   "peerDependencies": {
     "@credo-ts/core": "*",
     "@credo-ts/openid4vc": "*"
@@ -41,10 +46,10 @@
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@changesets/cli": "^2.29.4",
-    "@credo-ts/askar": "0.6.0-alpha-20250602122957",
-    "@credo-ts/core": "0.6.0-alpha-20250602122957",
-    "@credo-ts/node": "0.6.0-alpha-20250602122957",
-    "@credo-ts/openid4vc": "0.6.0-alpha-20250602122957",
+    "@credo-ts/askar": "0.6.0-alpha-20250915220951",
+    "@credo-ts/core": "0.6.0-alpha-20250915220951",
+    "@credo-ts/node": "0.6.0-alpha-20250915220951",
+    "@credo-ts/openid4vc": "0.6.0-alpha-20250915220951",
     "@openwallet-foundation/askar-nodejs": "^0.3.2",
     "@types/node": "^22.15.29",
     "tsup": "^8.5.0",

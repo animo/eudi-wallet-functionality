@@ -1,0 +1,17 @@
+diff --git a/dist/index.js b/dist/index.js
+index 575e4fd485af448b5d104aa61a2b8876dace28af..cd8c0da8e44f0b4b24386b7c91110a19fd88bf40 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -838,9 +838,9 @@ function parseAuthorizationRequestVersion(request) {
+   if (request.presentation_definition || request.presentation_definition_uri) {
+     requirements.push(["<", 26]);
+   }
+-  if (request.verifier_attestations) {
+-    requirements.push([">=", 26]);
+-  }
++  // if (request.verifier_attestations) {
++  //   requirements.push([">=", 26]);
++  // }
+   if (request.client_id?.startsWith("x509_san_uri:")) {
+     requirements.push(["<", 25]);
+   }
