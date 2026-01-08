@@ -1,6 +1,3 @@
-import { ResolvedTs12Metadata } from './validation/ts12'
-import type { ZScaAttestationExt } from './validation/z-sca-attestation-ext'
-
 export class EudiWalletExtensionsError extends Error {
   constructor(message: string) {
     super(message)

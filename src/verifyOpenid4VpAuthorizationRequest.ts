@@ -150,7 +150,7 @@ export const verifyOpenid4VpAuthorizationRequest = async (
         )
       }
 
-      if (parsedPayload.iat && new Date().getTime() / 1000 <= parsedPayload.iat) {
+      if (parsedPayload.iat && Date.now() / 1000 <= parsedPayload.iat) {
         throw new Error('Issued at timestamp of the registration certificate is in the future')
       }
 

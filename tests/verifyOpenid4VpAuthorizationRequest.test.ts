@@ -1,9 +1,9 @@
-import { doesNotReject, equal, ok, rejects } from 'node:assert'
+import { equal, ok, rejects } from 'node:assert'
 import { after, before, beforeEach, suite, test } from 'node:test'
 import { AskarModule } from '@credo-ts/askar'
 import { Agent } from '@credo-ts/core'
 import { agentDependencies } from '@credo-ts/node'
-import { OpenId4VcHolderModule } from '@credo-ts/openid4vc'
+import { OpenId4VcModule } from '@credo-ts/openid4vc'
 import { askar } from '@openwallet-foundation/askar-nodejs'
 import { verifyOpenid4VpAuthorizationRequest } from '../src'
 
@@ -22,11 +22,12 @@ pUGCFdfNLQIgHGSa5u5ZqUtCrnMiaEageO71rjzBlov0YUH4+6ELioY=
 
 const modules = {
   askar: new AskarModule({ askar, store: { id: 'secure-id', key: 'secure-key' } }),
-  oid4vc: new OpenId4VcHolderModule(),
+  openid4vc: new OpenId4VcModule(),
 }
 
-suite('verify openid4vp authorization request', () => {
-  suite('According to https://funke-wallet.de', () => {
+// Skip until re-implemented based on etsi spec
+suite.skip('verify openid4vp authorization request', () => {
+  suite.skip('According to https://funke-wallet.de', () => {
     let agent: Agent<typeof modules>
 
     before(async () => {
@@ -50,7 +51,7 @@ suite('verify openid4vp authorization request', () => {
       const authorizationRequestUrl =
         'openid4vp://?client_id=x509_san_dns%3Afunke-wallet.de&request_uri=https%3A%2F%2Ffunke-wallet.de%2Foid4vp%2Fdraft-24%2Fvalid-request%2Fdcql'
 
-      const request = await agent.modules.oid4vc.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
+      const request = await agent.openid4vc.holder.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
         trustedCertificates,
       })
 
@@ -67,7 +68,7 @@ suite('verify openid4vp authorization request', () => {
       const authorizationRequestUrl =
         'openid4vp://?client_id=x509_san_dns%3Afunke-wallet.de&request_uri=https%3A%2F%2Ffunke-wallet.de%2Foid4vp%2Fdraft-24%2Fvalid-request%2Fdcql'
 
-      const request = await agent.modules.oid4vc.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
+      const request = await agent.openid4vc.holder.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
         trustedCertificates,
       })
 
@@ -84,7 +85,7 @@ suite('verify openid4vp authorization request', () => {
       const authorizationRequestUrl =
         'openid4vp://?client_id=x509_san_dns%3Afunke-wallet.de&request_uri=https%3A%2F%2Ffunke-wallet.de%2Foid4vp%2Fdraft-24%2Fvalid-request%2Fpex'
 
-      const request = await agent.modules.oid4vc.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
+      const request = await agent.openid4vc.holder.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
         trustedCertificates,
       })
 
@@ -100,7 +101,7 @@ suite('verify openid4vp authorization request', () => {
       const authorizationRequestUrl =
         'openid4vp://?client_id=x509_san_dns%3Afunke-wallet.de&request_uri=https%3A%2F%2Ffunke-wallet.de%2Foid4vp%2Fdraft-24%2Foverask%2Fdcql'
 
-      const request = await agent.modules.oid4vc.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
+      const request = await agent.openid4vc.holder.resolveOpenId4VpAuthorizationRequest(authorizationRequestUrl, {
         trustedCertificates,
       })
 

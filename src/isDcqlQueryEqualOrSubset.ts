@@ -62,19 +62,13 @@ export function isDcqlQueryEqualOrSubset(arq: DcqlQuery, rcq: DcqlQuery): boolea
 
         break
       }
-      case 'dc+sd-jwt':
-      case 'vc+sd-jwt': {
+      case 'dc+sd-jwt': {
         const vctValues = credentialQuery.meta?.vct_values
-        if (!vctValues) return false
-        if (credentialQuery.meta?.vct_values?.length === 0) return false
+        if (!vctValues || vctValues.length === 0) return false
 
         const foundMatchingRequests = matchingRcqCredentialQueriesBasedOnFormat.filter(
-          (c): c is typeof c & ({ format: 'dc+sd-jwt' } | { format: 'vc+sd-jwt' }) =>
-            !!(
-              (c.format === 'dc+sd-jwt' || c.format === 'vc+sd-jwt') &&
-              c.meta?.vct_values &&
-              equalsIgnoreOrder(c.meta.vct_values, vctValues)
-            )
+          (c): c is typeof c & { format: 'dc+sd-jwt' } =>
+            !!(c.format === 'dc+sd-jwt' && c.meta?.vct_values && equalsIgnoreOrder(c.meta.vct_values, vctValues))
         )
 
         // We do not know which one we have to pick based on the meta+format
