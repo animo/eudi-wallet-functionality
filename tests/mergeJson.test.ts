@@ -8,8 +8,14 @@ describe('mergeJson', () => {
       assert.strictEqual(mergeJson(1, 2), 2)
       assert.strictEqual(mergeJson('a', 'b'), 'b')
       assert.strictEqual(mergeJson(true, false), false)
+    })
+
+    it('should throw error when setting non-nullable to null', () => {
+      assert.throws(() => mergeJson(1, null), /cannot set non-nullable value to null/)
+    })
+
+    it('should allow setting null to value', () => {
       assert.strictEqual(mergeJson(null, 1), 1)
-      assert.strictEqual(mergeJson(1, null), null)
     })
 
     it('should handle undefined', () => {
@@ -17,9 +23,10 @@ describe('mergeJson', () => {
       assert.strictEqual(mergeJson(undefined, 1), 1)
     })
 
-    it('should replace mismatched types', () => {
-      assert.strictEqual(mergeJson({ a: 1 }, 2), 2)
-      assert.deepStrictEqual(mergeJson([1], { a: 1 }), { a: 1 })
+    it('should throw error on mismatched types', () => {
+      assert.throws(() => mergeJson({ a: 1 }, 2), /Type mismatch/)
+      assert.throws(() => mergeJson([1], { a: 1 }), /Type mismatch/)
+      assert.throws(() => mergeJson(1, 'a'), /Type mismatch/)
     })
   })
 
@@ -90,9 +97,7 @@ describe('mergeJson', () => {
       ]
       const config = {
         arrayStrategy: 'merge' as const,
-        fields: {
-          '': { arrayDiscriminant: 'id' },
-        },
+        arrayDiscriminant: 'id',
       }
       assert.deepStrictEqual(mergeJson(target, source, config), [
         { id: 1, val: 'a' },
@@ -112,9 +117,7 @@ describe('mergeJson', () => {
       ]
       const config = {
         arrayStrategy: 'merge' as const,
-        fields: {
-          '': { arrayDiscriminant: ['type', 'subtype'] },
-        },
+        arrayDiscriminant: ['type', 'subtype'],
       }
       assert.deepStrictEqual(mergeJson(target, source, config), [
         { type: 'A', subtype: '1', val: 'z' },
@@ -137,9 +140,7 @@ describe('mergeJson', () => {
       ]
       const config = {
         arrayStrategy: 'merge' as const,
-        fields: {
-          '': { arrayDiscriminant: ['type', 'subtype'] },
-        },
+        arrayDiscriminant: ['type', 'subtype'],
       }
       assert.deepStrictEqual(mergeJson(target, source, config), [
         { type: 'A', subtype: '1', val: 'x-updated' },
@@ -187,7 +188,8 @@ describe('mergeJson', () => {
     it('should handle null values correctly', () => {
       const target = { a: 1, b: { c: 2 } }
       const source = { a: null, b: null }
-      assert.deepStrictEqual(mergeJson(target, source), { a: null, b: null })
+      // Expect error because target.a is 1 (non-null) and source.a is null
+      assert.throws(() => mergeJson(target, source), /cannot set non-nullable value to null/)
     })
 
     it('should handle complex nested structure with discriminants', () => {
