@@ -4,13 +4,6 @@ export const zScaTransactionDataTypeClaims = z.array(
   z.object({
     /** The path to the claim within the transaction payload. */
     path: z.array(z.string()),
-    /** * [TS12 3.3.2] Visual importance.
-     * 1: Prominent (Top priority)
-     * 2: Main (Standard visibility)
-     * 3: Supplementary (Details view)
-     * 4: Omitted (Not displayed)
-     */
-    visualisation: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).default(3),
     /** [ARF Annex 4] Localised display information for the claim. */
     display: z
       .array(
@@ -115,20 +108,16 @@ export const zScaAttestationExt = z.object({
    * MUST be 'urn:eu:europa:ec:eudi:sua:sca' for SCA Attestations.
    */
   category: z.string().optional(),
-  transaction_data_types: z.record(
-    z.string().describe('Transaction Type URI (e.g., urn:eudi:sca:payment:1). Must be collision resistant.'),
+  transaction_data_types: z.array(
     z.intersection(
-      z.union([
-        z.object({
-          /** [TS12 4.1] Embedded JSON Schema string defining the payload structure. MUST NOT be used if schema_uri is present. */
-          schema: z.string(),
-        }),
-        z.object({
-          /** [TS12 4.1] URI referencing an external JSON Schema document. MUST NOT be used if schema is present. */
-          schema_uri: z.url(),
-          'schema_uri#integrity': z.string().optional(),
-        }),
-      ]),
+      z.object({
+        /** [TS12 4.1] URI (URL or URN) that references a [JSON Schema] defining the structure of the `payload` object within the `transaction_data` object. */
+        type: z.string(),
+        /** [TS12 4.1] Hash of the document referenced by `type`. MUST be present if `type` is a URL and integrity protection is desired. */
+        'type#integrity': z.string().optional(),
+        /** [TS12 4.1] A string that can be used to further categorize the transaction type. */
+        subtype: z.string().optional(),
+      }),
       z.intersection(
         z.union([
           z.object({

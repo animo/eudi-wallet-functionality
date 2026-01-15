@@ -1,5 +1,7 @@
 export * from './error'
+export * from './mergeJson'
 export * from './validation/ts12'
 export * from './validation/z-sca-attestation-ext'
 export * from './validation/z-transaction-data'
 export { verifyOpenid4VpAuthorizationRequest } from './verifyOpenid4VpAuthorizationRequest'
+

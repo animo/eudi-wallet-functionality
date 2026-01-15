@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { Ts12IntegrityError } from '../error'
+import { type MergeConfig, mergeJson } from '../mergeJson'
 import {
   type ZScaAttestationExt,
   zScaTransactionDataTypeClaims,
@@ -11,7 +12,6 @@ export interface ResolvedTs12Metadata {
   schema: string | object
   claims: Array<{
     path: string[]
-    visualisation: 1 | 2 | 3 | 4
     display: Array<{ name: string; locale?: string; logo?: string }>
   }>
   ui_labels: {
@@ -41,25 +41,28 @@ async function fetchVerified<T>(
 export async function resolveTs12TransactionDisplayMetadata(
   metadata: ZScaAttestationExt,
   type: string,
+  subtype?: string,
   validateIntegrity?: (buf: ArrayBuffer, integrity: string) => boolean
 ): Promise<ResolvedTs12Metadata | undefined> {
-  if (!metadata.transaction_data_types || !metadata.transaction_data_types[type]) {
+  if (!metadata.transaction_data_types) {
     return undefined
   }
 
-  const typeMetadata = metadata.transaction_data_types[type]
+  const typeMetadata = metadata.transaction_data_types.find((t) => t.type === type && t.subtype === subtype)
+
+  if (!typeMetadata) {
+    return undefined
+  }
+
   const resolved: Partial<ResolvedTs12Metadata> = {}
 
-  if ('schema' in typeMetadata && typeMetadata.schema) {
-    if (!(typeMetadata.schema in ts12BuiltinSchemaValidators)) {
-      throw new Error(`unknown builtin schema: ${typeMetadata.schema}`)
-    }
-    resolved.schema = typeMetadata.schema
-  } else if ('schema_uri' in typeMetadata && typeMetadata.schema_uri) {
+  if (typeMetadata.type in ts12BuiltinSchemaValidators) {
+    resolved.schema = typeMetadata.type
+  } else if (typeMetadata.type.startsWith('http')) {
     resolved.schema = await fetchVerified(
-      typeMetadata.schema_uri,
+      typeMetadata.type,
       z.object({}),
-      typeMetadata['schema_uri#integrity'],
+      typeMetadata['type#integrity'],
       validateIntegrity
     )
   } else {
@@ -94,3 +97,81 @@ export async function resolveTs12TransactionDisplayMetadata(
 
   return resolved as ResolvedTs12Metadata
 }
+
+export const baseMergeConfig = {
+  fields: {
+    // [Display Metadata]
+    // RULE: COMPLETE REPLACEMENT
+    display: {
+      strategy: 'replace',
+    },
+
+    // [Claim Metadata]
+    // RULE: MERGE BY PATH
+    claims: {
+      strategy: 'merge',
+      arrayDiscriminant: 'path',
+      items: {
+        fields: {
+          // Constraint Rule: 'sd' (Selective Disclosure)
+          sd: {
+            validate: (target: unknown, source: unknown) => {
+              // Parent: "always" -> Child: MUST remain "always"
+              if (target === 'always' && source !== 'always') {
+                throw new Error("Constraint violation: 'sd' cannot change from 'always'")
+              }
+              // Parent: "never" -> Child: MUST remain "never"
+              if (target === 'never' && source !== 'never') {
+                throw new Error("Constraint violation: 'sd' cannot change from 'never'")
+              }
+            },
+          },
+          // Constraint Rule: 'mandatory'
+          mandatory: {
+            validate: (target: unknown, source: unknown) => {
+              // Parent: true -> Child: MUST remain true
+              if (target === true && source !== true) {
+                throw new Error("Constraint violation: 'mandatory' cannot change from true to false")
+              }
+            },
+          },
+        },
+      },
+    },
+  },
+} as const satisfies MergeConfig
+
+export const ts12MergeConfig = mergeJson(baseMergeConfig, {
+  fields: {
+    transaction_data_types: {
+      arrayStrategy: 'append', // Default for unknown arrays
+      strategy: 'merge',
+      arrayDiscriminant: ['type', 'subtype'],
+      items: {
+        fields: {
+          claims: {
+            strategy: 'merge',
+            arrayDiscriminant: 'path',
+            items: {
+              fields: {
+                // Display: Merge by lang
+                display: {
+                  strategy: 'merge',
+                  arrayDiscriminant: 'lang',
+                },
+              },
+            },
+          },
+          ui_labels: {
+            strategy: 'merge',
+            // Use 'items' to apply configuration to all properties of the ui_labels object
+            items: {
+              strategy: 'merge',
+              arrayDiscriminant: 'lang',
+            },
+          },
+        },
+      },
+    },
+  },
+} as const satisfies MergeConfig) satisfies MergeConfig
