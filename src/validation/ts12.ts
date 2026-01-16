@@ -15,10 +15,10 @@ export interface ResolvedTs12Metadata {
     display: Array<{ name: string; locale?: string; logo?: string }>
   }>
   ui_labels: {
-    affirmative_action_label: Array<{ lang: string; value: string }>
-    denial_action_label?: Array<{ lang: string; value: string }>
-    transaction_title?: Array<{ lang: string; value: string }>
-    security_hint?: Array<{ lang: string; value: string }>
+    affirmative_action_label: Array<{ locale: string; value: string }>
+    denial_action_label?: Array<{ locale: string; value: string }>
+    transaction_title?: Array<{ locale: string; value: string }>
+    security_hint?: Array<{ locale: string; value: string }>
   }
 }
 
@@ -154,10 +154,10 @@ export const ts12MergeConfig = mergeJson(baseMergeConfig, {
             arrayDiscriminant: 'path',
             items: {
               fields: {
-                // Display: Merge by lang
+                // Display: Merge by locale
                 display: {
                   strategy: 'merge',
-                  arrayDiscriminant: 'lang',
+                  arrayDiscriminant: 'locale',
                 },
               },
             },
@@ -167,7 +167,7 @@ export const ts12MergeConfig = mergeJson(baseMergeConfig, {
             // Use 'items' to apply configuration to all properties of the ui_labels object
             items: {
               strategy: 'merge',
-              arrayDiscriminant: 'lang',
+              arrayDiscriminant: 'locale',
             },
           },
         },

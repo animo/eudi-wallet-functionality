@@ -30,7 +30,7 @@ export const zScaTransactionDataTypeUiLabels = z
       .array(
         z.object({
           /** [RFC5646] Language identifier (e.g., "en", "fr-CA"). */
-          lang: z.string(),
+          locale: z.string(),
           /** Localised string value. Max length: 30 chars. */
           value: z.string().max(30),
         })
@@ -45,7 +45,7 @@ export const zScaTransactionDataTypeUiLabels = z
       .array(
         z.object({
           /** [RFC5646] Language identifier. */
-          lang: z.string(),
+          locale: z.string(),
           /** Localised string value. Max length: 30 chars. */
           value: z.string().max(30),
         })
@@ -61,7 +61,7 @@ export const zScaTransactionDataTypeUiLabels = z
       .array(
         z.object({
           /** [RFC5646] Language identifier. */
-          lang: z.string(),
+          locale: z.string(),
           /** Localised string value. Max length: 50 chars. */
           value: z.string().max(50),
         })
@@ -77,7 +77,7 @@ export const zScaTransactionDataTypeUiLabels = z
       .array(
         z.object({
           /** [RFC5646] Language identifier. */
-          lang: z.string(),
+          locale: z.string(),
           /** Localised string value. Max length: 250 chars. */
           value: z.string().max(250),
         })
@@ -89,7 +89,7 @@ export const zScaTransactionDataTypeUiLabels = z
     // [TS12] "Additional UI elements identifiers MAY be defined"
     z.array(
       z.object({
-        lang: z.string(),
+        locale: z.string(),
         value: z.string(),
       })
     )
