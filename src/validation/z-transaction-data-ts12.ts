@@ -220,127 +220,17 @@ export const zPaymentPayload = z
   })
 
 /**
- * **TS12 Login / Risk Payload**
+ * **TS12 Generic Payload**
  * * @see EUDI TS12 Section 4.3.2
  */
-export const zLoginPayload = z.object({
-  /**
-   * **Transaction ID**
-   * Unique identifier of the Relying Party's interaction.
-   * @example "8D8AC610-566D-4EF0-9C22-186B2A5ED793"
-   */
-  transaction_id: z.string().min(1).max(36),
-
-  /**
-   * **Date Time**
-   * @example "2025-11-13T20:20:39+00:00"
-   */
-  date_time: z.iso.datetime().optional(),
-
-  /**
-   * **Service**
-   * Name of the service triggering the operation (e.g. "Superbank Online").
-   * @example "Superbank Onlinebanking"
-   */
-  service: z.string().max(100).optional(),
-
-  /**
-   * **Action**
-   * Description of the action (e.g. "Log in", "Change limit").
-   * @example "Login to your online account."
-   */
-  action: z.string().max(140).describe('Description of the action to be authorized'),
-})
-
-/**
- * **TS12 Account Access Payload**
- * * @see EUDI TS12 Section 4.3.3
- */
-export const zAccountAccessPayload = z.object({
-  /**
-   * **Transaction ID**
-   * @example "8D8AC610-566D-4EF0-9C22-186B2A5ED793"
-   */
-  transaction_id: z.string().min(1).max(36),
-
-  /**
-   * **Date Time**
-   * @example "2025-11-13T20:20:39+00:00"
-   */
-  date_time: z.iso.datetime().optional(),
-
-  /**
-   * **AISP Details**
-   * If present, indicates access facilitated by an AISP.
-   */
-  aisp: z
-    .object({
-      legal_name: z.string(),
-      brand_name: z.string(),
-      domain_name: z.string(),
-    })
-    .optional(),
-
-  /**
-   * **Description**
-   * Description of the data access the user is agreeing to.
-   * @example "Grant access to the account's data."
-   */
-  description: z.string().max(140).optional(),
-})
-
-/**
- * **TS12 E-Mandate Payload**
- * * @see EUDI TS12 Section 4.3.4
- */
-export const zEMandatePayload = z
+export const zGenericPayload = z
   .object({
     /**
      * **Transaction ID**
+     * Unique identifier of the Relying Party's interaction.
      * @example "8D8AC610-566D-4EF0-9C22-186B2A5ED793"
      */
     transaction_id: z.string().min(1).max(36),
-
-    /**
-     * **Date Time**
-     * @example "2025-11-13T20:20:39+00:00"
-     */
-    date_time: z.iso.datetime().optional(),
-
-    /**
-     * **Start Date**
-     * When the mandate becomes valid.
-     * @example "2025-11-13T20:20:39+00:00"
-     */
-    start_date: z.iso.datetime().optional(),
-
-    /**
-     * **End Date**
-     * When the mandate expires.
-     * @example "2025-12-13T20:20:39+00:00"
-     */
-    end_date: z.iso.datetime().optional(),
-
-    /**
-     * **Reference Number**
-     * E.g. Mandate Reference Number.
-     * @example "A-98765"
-     */
-    reference_number: z.string().min(1).max(50).optional(),
-
-    /**
-     * **Creditor ID**
-     * SEPA Creditor Identifier.
-     * @example "FR14ZZZ001122334455"
-     */
-    creditor_id: z.string().min(1).max(50).optional(),
-
-    /**
-     * **Purpose**
-     * Mandate text. Required if payment_payload is missing.
-     * @example "Pay monthly bill"
-     */
-    purpose: z.string().max(1000).optional(),
 
     /**
      * **Payment Payload**
@@ -348,31 +238,46 @@ export const zEMandatePayload = z
      */
     payment_payload: zPaymentPayload.optional(),
   })
-  .refine((data) => data.payment_payload || data.purpose, {
-    message: 'Purpose is required if payment_payload is missing',
-    path: ['purpose'],
-  })
+  .catchall(z.string().max(40).nullable())
+  .refine(
+    (data) => {
+      return Object.keys(data).length <= 11
+    },
+    { message: 'Total number of properties is limited to 11' }
+  )
 
-export type Ts12AccountAccessPayload = z.infer<typeof zAccountAccessPayload>
-export type Ts12EMandatePayload = z.infer<typeof zEMandatePayload>
-export type Ts12LoginPayload = z.infer<typeof zLoginPayload>
 export type Ts12PaymentPayload = z.infer<typeof zPaymentPayload>
+export type Ts12GenericPayload = z.infer<typeof zGenericPayload>
 
 export const URN_SCA_PAYMENT = 'urn:eudi:sca:payment:1'
-export const URN_SCA_LOGIN_RISK = 'urn:eudi:sca:login_risk_transaction:1'
-export const URN_SCA_ACCOUNT_ACCESS = 'urn:eudi:sca:account_access:1'
-export const URN_SCA_EMANDATE = 'urn:eudi:sca:emandate:1'
+export const URN_SCA_GENERIC = 'urn:eudi:sca:generic:1'
 
 // =============================================================================
 // 2. ROOT TRANSACTION DATA OBJECT (OpenID4VP Envelope)
 // Source: OpenID4VP Section 5.1 & TS12 Section 4.3
 // =============================================================================
 
+export const zTs12PaymentTransaction = zBaseTransaction.extend({
+  type: z.literal(URN_SCA_PAYMENT),
+  subtype: z.undefined(),
+  payload: zPaymentPayload,
+})
+
+export const zTs12GenericTransaction = zBaseTransaction.extend({
+  type: z.literal(URN_SCA_GENERIC),
+  subtype: z.string(),
+  payload: zGenericPayload,
+})
+
+export const zTs12FallbackTransaction = zBaseTransaction.extend({
+  subtype: z.string().optional(),
+  payload: z.unknown(),
+})
+
 /**
  * **TS12 Transaction**
  * @see TS12 Section 4.3
  */
-export const zTs12Transaction = zBaseTransaction.extend({
-  payload: z.union([zPaymentPayload, zLoginPayload, zAccountAccessPayload, zEMandatePayload, z.unknown()]),
-})
+export const zTs12Transaction = z.union([zTs12PaymentTransaction, zTs12GenericTransaction, zTs12FallbackTransaction])
+
 export type Ts12TransactionDataEntry = z.infer<typeof zTs12Transaction>

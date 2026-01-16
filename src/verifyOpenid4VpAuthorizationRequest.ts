@@ -67,11 +67,11 @@ export const verifyOpenid4VpAuthorizationRequest = async (
           typ: z.literal('rc-rp+jwt'),
           alg: z.string(),
           // sprin-d did not define this
-          x5u: z.string().url().optional(),
+          x5u: z.url().optional(),
           // sprin-d did not define this
           'x5t#s256': z.string().optional(),
         })
-        .passthrough()
+        .loose()
 
       // TODO: does not support intermediaries
       const registrationCertificatePayloadSchema = z
@@ -105,8 +105,8 @@ export const verifyOpenid4VpAuthorizationRequest = async (
             })
           ),
           contact: z.object({
-            website: z.string().url(),
-            'e-mail': z.string().email(),
+            website: z.url(),
+            'e-mail': z.email(),
             phone: z.string(),
           }),
           sub: z.string(),
@@ -122,7 +122,7 @@ export const verifyOpenid4VpAuthorizationRequest = async (
               })
             )
             .optional(),
-          privacy_policy: z.string().url(),
+          privacy_policy: z.url(),
           iat: z.number().optional(),
           exp: z.number().optional(),
           purpose: z
@@ -136,7 +136,7 @@ export const verifyOpenid4VpAuthorizationRequest = async (
             .optional(),
           status: z.any(),
         })
-        .passthrough()
+        .loose()
 
       registrationCertificateHeaderSchema.parse(jwt.header)
       const parsedPayload = registrationCertificatePayloadSchema.parse(jwt.payload.toJson())
