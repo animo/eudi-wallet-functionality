@@ -1,6 +1,6 @@
 import assert from 'node:assert'
 import { describe, it } from 'node:test'
-import { mergeJson } from '../src/mergeJson'
+import { mergeJson } from '../src/merge-json'
 
 describe('mergeJson', () => {
   describe('Primitives', () => {

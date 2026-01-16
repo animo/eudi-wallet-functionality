@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Ts12IntegrityError } from '../error'
-import { type MergeConfig, mergeJson } from '../mergeJson'
+import { type MergeConfig, mergeJson } from '../merge-json'
 import {
   type ZScaAttestationExt,
   zScaTransactionDataTypeClaims,
