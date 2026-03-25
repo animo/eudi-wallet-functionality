@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@animo-id/eudi-wallet-ts12-validation':
+        specifier: workspace:*
+        version: link:packages/validation
       zod:
         specifier: ^4.3.5
         version: 4.3.5
@@ -42,6 +45,48 @@ importers:
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/dcql:
+    dependencies:
+      '@animo-id/eudi-wallet-ts12-resolver':
+        specifier: workspace:*
+        version: link:../resolver
+      '@animo-id/eudi-wallet-ts12-validation':
+        specifier: workspace:*
+        version: link:../validation
+    devDependencies:
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/resolver:
+    dependencies:
+      '@animo-id/eudi-wallet-ts12-validation':
+        specifier: workspace:*
+        version: link:../validation
+    devDependencies:
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/validation:
+    dependencies:
+      zod:
+        specifier: ^4.3.5
+        version: 4.3.5
+    devDependencies:
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
       typescript:
         specifier: ~5.9.3
         version: 5.9.3

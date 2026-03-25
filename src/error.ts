@@ -7,13 +7,3 @@ export class EudiWalletExtensionsError extends Error {
     }
   }
 }
-
-export class Ts12IntegrityError extends EudiWalletExtensionsError {
-  constructor(uri: string, integrity: string) {
-    super(`Invalid integrity for ${uri}, expected ${integrity}`)
-    this.name = 'Ts12IntegrityError'
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, Ts12IntegrityError)
-    }
-  }
-}
