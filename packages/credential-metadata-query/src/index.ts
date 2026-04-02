@@ -1,0 +1,6 @@
+export * from './credential-metadata-query-api'
+export * from './credential-metadata-query-module'
+export * from './credential-metadata-query-service'
+export * from './repository/credential-metadata-jwt-record'
+export * from './repository/credential-metadata-jwt-repository'
+export * from './types'

@@ -1,5 +1,5 @@
 import type { ResolvedTransactionDisplay, ValueTypeResolvers } from '@animo-id/eudi-wallet-ts12-resolver'
-import type { ScaCredentialMetadata } from '@animo-id/eudi-wallet-ts12-validation'
+import type { ScaCredentialMetadata, ScaTransactionTypeMatcher } from '@animo-id/eudi-wallet-ts12-validation'
 
 // =============================================================================
 // DCQL Query types per OID4VP 1.0 Section 6
@@ -68,14 +68,7 @@ export interface DcqlQuery {
 // Credential display metadata (OID4VCI Section 12.2.4 + TS12 Section 5)
 // =============================================================================
 
-/** SVG template reference per [SD-JWT-VC] Section 7.1.2, extended by TS12 Section 5. */
-export interface SvgTemplate {
-  uri: string
-  /** W3C SRI integrity hash. REQUIRED per TS12 Section 1.5.4 when supported. */
-  'uri#integrity'?: string
-}
-
-/** A locale entry in a credential's display array. */
+/** A locale entry in a credential's display array per [OID4VCI] Section 12.2.4. */
 export interface CredentialDisplayEntry {
   name: string
   locale?: string
@@ -83,8 +76,6 @@ export interface CredentialDisplayEntry {
   logo?: { uri: string; alt_text?: string }
   background_color?: string
   text_color?: string
-  /** SVG card templates per [SD-JWT-VC] Section 7.1.2. */
-  svg_templates?: SvgTemplate[]
 }
 
 /** Locale-resolved credential display (single entry, no array). */
@@ -94,8 +85,6 @@ export interface ResolvedCredentialDisplay {
   logo?: { uri: string; alt_text?: string }
   background_color?: string
   text_color?: string
-  /** Locale-matched SVG template (if wallet supports SVG and templates are present). */
-  svg_template?: SvgTemplate
 }
 
 // =============================================================================
@@ -108,18 +97,17 @@ export interface WalletConfiguration {
   locales: string[]
   /** Value type resolver map. */
   valueTypeResolvers: ValueTypeResolvers
-  /** Display mode for theming (affects SVG template selection, credential rendering). */
+  /** Display mode for theming. */
   mode: 'dark' | 'light'
-  /** Whether the wallet supports SVG template rendering. */
-  supportsSvgTemplates: boolean
-  /** Card format dimensions for SVG template rendering. */
-  cardFormat?: {
-    width: number
-    height: number
-  }
+  /**
+   * Predicate that determines whether a transaction_data `type` string
+   * identifies an SCA-compatible transaction. Defaults to `defaultScaTypeMatcher`
+   * (matches `urn:eudi:sca:` prefix). Override to support additional standards.
+   */
+  scaTypeMatcher?: ScaTransactionTypeMatcher
   /**
    * Check whether a credential supports a non-SCA transaction_data type.
-   * Called for transaction_data entries without the `urn:eudi:sca:` prefix.
+   * Called for transaction_data entries not matched by `scaTypeMatcher`.
    * If absent, all credentials targeted by non-SCA transaction_data are
    * considered incompatible.
    */

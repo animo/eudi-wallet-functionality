@@ -1,4 +1,4 @@
-import { isScaTransactionType } from '@animo-id/eudi-wallet-ts12-validation'
+import { defaultScaTypeMatcher } from '@animo-id/eudi-wallet-ts12-validation'
 import { bestEffortDecompose, decomposeTransposable, type SlotDecomposition } from './cartesian'
 import { resolveAllMatchedCredentials } from './resolve-credentials'
 import { err, ok, type Result } from './result'
@@ -99,10 +99,14 @@ export function buildResolvedSlot(
 /**
  * Collect the set of DCQL credential query IDs referenced by SCA transaction_data entries.
  */
-export function collectScaCredentialQueryIds(transactionData: TransactionDataInput[]): Set<string> {
+export function collectScaCredentialQueryIds(
+  transactionData: TransactionDataInput[],
+  config: WalletConfiguration
+): Set<string> {
+  const isScaType = config.scaTypeMatcher ?? defaultScaTypeMatcher
   const ids = new Set<string>()
   for (const td of transactionData) {
-    if (isScaTransactionType(td.type)) {
+    if (isScaType(td.type)) {
       for (const id of td.credential_ids) ids.add(id)
     }
   }
@@ -146,7 +150,7 @@ export function resolveScaCredentialSet(
   const required = credentialSet.required !== false
 
   const firstSatisfiable = findFirstSatisfiableOption(options, queries, matchCredentials)
-  const scaQueryIds = collectScaCredentialQueryIds(transactionData)
+  const scaQueryIds = collectScaCredentialQueryIds(transactionData, config)
   const { sca, nonSca } = partitionOptions(options, scaQueryIds)
 
   // SCA options: strict transposability

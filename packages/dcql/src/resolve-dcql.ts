@@ -1,4 +1,4 @@
-import { isScaTransactionType } from '@animo-id/eudi-wallet-ts12-validation'
+import { defaultScaTypeMatcher } from '@animo-id/eudi-wallet-ts12-validation'
 import { resolveNonScaCredentialSet, resolveScaCredentialSet } from './resolve-credential-set'
 import { canResolveCredentialForLocale } from './resolve-credentials'
 import { err, isErr, ok, type Result } from './result'
@@ -17,19 +17,27 @@ import type {
 /**
  * Build a lookup map from credential query ID to query object.
  */
-export function buildCredentialQueryMap(credentials: DcqlCredentialQuery[]): Map<string, DcqlCredentialQuery> {
+/**
+ * Build a lookup map from credential query ID to query object.
+ * Returns undefined if duplicate IDs are found (OID4VP §6.1: "the same id MUST NOT be present more than once").
+ */
+export function buildCredentialQueryMap(
+  credentials: DcqlCredentialQuery[]
+): Map<string, DcqlCredentialQuery> | undefined {
   const map = new Map<string, DcqlCredentialQuery>()
   for (const q of credentials) {
+    if (map.has(q.id)) return undefined
     map.set(q.id, q)
   }
   return map
 }
 
 /**
- * Check whether any transaction_data entry has the SCA prefix.
+ * Check whether any transaction_data entry is SCA-compatible per the given matcher.
  */
-export function hasScaTransactionData(transactionData: TransactionDataInput[]): boolean {
-  return transactionData.some((td) => isScaTransactionType(td.type))
+export function hasScaTransactionData(transactionData: TransactionDataInput[], config: WalletConfiguration): boolean {
+  const isScaType = config.scaTypeMatcher ?? defaultScaTypeMatcher
+  return transactionData.some((td) => isScaType(td.type))
 }
 
 /**
@@ -138,6 +146,27 @@ function resolveNonScaDcql(
 // =============================================================================
 
 /**
+ * OID4VP §6.1, §6.4.1 — Validate DCQL query structural constraints.
+ *
+ * - §6.1: "the same id MUST NOT be present more than once"
+ * - §6.4.1: "claim_sets MUST NOT be present if claims is absent"
+ */
+export function validateDcqlQueryStructure(dcqlQuery: DcqlQuery): string | undefined {
+  const seenIds = new Set<string>()
+  for (const q of dcqlQuery.credentials) {
+    if (seenIds.has(q.id)) {
+      return `Duplicate credential query id '${q.id}' (OID4VP §6.1)`
+    }
+    seenIds.add(q.id)
+
+    if (q.claim_sets && !q.claims) {
+      return `Credential query '${q.id}' has claim_sets but no claims (OID4VP §6.4.1)`
+    }
+  }
+  return undefined
+}
+
+/**
  * Validate that all credential query IDs referenced by transaction_data entries
  * appear within the options of a single credential set.
  */
@@ -171,8 +200,7 @@ export function validateTransactionDataCredentialSet(
 /**
  * Resolve a DCQL query's credential sets into independent slots.
  *
- * Detects whether the request involves SCA by checking if any `transaction_data`
- * entry has the `urn:eudi:sca:` prefix:
+ * Detects whether the request involves SCA using `config.scaTypeMatcher`:
  *
  * - **SCA present**: strict TS12 rules — locale MUST satisfy all display arrays,
  *   SCA options MUST be transposable. Returns `Err` on failure.
@@ -187,19 +215,27 @@ export function resolveDcql(
   matchCredentials: CredentialMatcher,
   config: WalletConfiguration
 ): Result<ResolvedDcqlResult> {
-  const queries = buildCredentialQueryMap(dcqlQuery.credentials)
+  const queryValidationError = validateDcqlQueryStructure(dcqlQuery)
+  if (queryValidationError) return err(queryValidationError)
+
+  // buildCredentialQueryMap is guaranteed to succeed after validation
+  const queries = buildCredentialQueryMap(dcqlQuery.credentials) as Map<string, DcqlCredentialQuery>
+
   const credentialSets = dcqlQuery.credential_sets
 
-  if (!credentialSets || credentialSets.length === 0) {
-    return ok({ locale: config.locales[0], credentialSets: [] })
-  }
+  // OID4VP §6.4.2: "If credential_sets is not provided, the Verifier requests
+  // presentations for all Credentials in credentials to be returned."
+  const effectiveCredentialSets: DcqlCredentialSetQuery[] =
+    credentialSets && credentialSets.length > 0
+      ? credentialSets
+      : dcqlQuery.credentials.map((q) => ({ options: [[q.id]], required: true }))
 
   const validationError = validateTransactionDataCredentialSet(dcqlQuery, transactionData)
   if (validationError) return err(validationError)
 
-  if (hasScaTransactionData(transactionData)) {
-    return resolveScaDcql(credentialSets, queries, transactionData, matchCredentials, config)
+  if (hasScaTransactionData(transactionData, config)) {
+    return resolveScaDcql(effectiveCredentialSets, queries, transactionData, matchCredentials, config)
   }
 
-  return resolveNonScaDcql(credentialSets, queries, transactionData, matchCredentials, config)
+  return resolveNonScaDcql(effectiveCredentialSets, queries, transactionData, matchCredentials, config)
 }

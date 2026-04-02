@@ -110,20 +110,69 @@ export const zTransactionDataType = z
   .loose()
 export type TransactionDataType = z.infer<typeof zTransactionDataType>
 
+// =============================================================================
+// OID4VCI Section 12.2.4 — Credential metadata display
+// =============================================================================
+
 /**
- * TS12 Section 4.1 — SCA Attestation credential metadata extension.
+ * [OID4VCI] Section 12.2.4 — Credential display entry.
  *
- * Extends [OID4VCI] Section 12.2.4 credential metadata with `transaction_data_types`.
- * The object is keyed by URN identifiers following:
- *   `urn:eudi:sca:<org-identifier>:<code>[:<subcode>]*:<version>`
+ * Locale-tagged display metadata for the credential itself (card rendering).
+ * Uses `.loose()` to allow additional fields per spec extensions.
+ */
+export const zCredentialDisplayEntry = z
+  .object({
+    name: z.string(),
+    locale: z.string().optional(),
+    description: z.string().optional(),
+    logo: z
+      .object({
+        uri: z.string(),
+        alt_text: z.string().optional(),
+      })
+      .optional(),
+    background_color: z.string().optional(),
+    text_color: z.string().optional(),
+  })
+  .loose()
+export type CredentialDisplayEntry = z.infer<typeof zCredentialDisplayEntry>
+
+// =============================================================================
+// OID4VCI Section 12.2.4 + TS12 Section 4.1 — Full credential metadata
+// =============================================================================
+
+/**
+ * [OID4VCI] Section 12.2.4 credential metadata, extended with TS12 `transaction_data_types`.
  *
- * Per Section 3.1, the Wallet Unit identifies SCA Attestations by checking whether
- * any key starts with `urn:eudi:sca:`.
+ * This is the `credential_metadata` object served at `credential_metadata_uri`.
+ * It contains:
+ * - `display`: credential-level display entries (name, logo, colors) per OID4VCI
+ * - `claims`: credential-level claim metadata per OID4VCI Appendix B.2
+ * - `transaction_data_types`: SCA transaction type definitions per TS12 Section 4.1
  *
- * Uses `.loose()` to allow standard OID4VCI fields (display, etc.) without validating them.
+ * Uses `.loose()` to allow additional OID4VCI fields without validating them.
+ */
+export const zCredentialMetadata = z
+  .object({
+    /** Credential-level display entries per [OID4VCI] Section 12.2.4. */
+    display: z.array(zCredentialDisplayEntry).optional(),
+    /** Credential-level claim metadata per [OID4VCI] Appendix B.2. */
+    claims: z.array(zClaimMetadata).optional(),
+    /** Transaction data type definitions per TS12 Section 4.1. */
+    transaction_data_types: z.record(z.string(), zTransactionDataType).optional(),
+  })
+  .loose()
+export type CredentialMetadata = z.infer<typeof zCredentialMetadata>
+
+/**
+ * SCA Attestation credential metadata — a `CredentialMetadata` where
+ * `transaction_data_types` is required (Section 3.1: SCA Attestations are
+ * identified by the presence of `transaction_data_types` keys).
  */
 export const zScaCredentialMetadata = z
   .object({
+    display: z.array(zCredentialDisplayEntry).optional(),
+    claims: z.array(zClaimMetadata).optional(),
     transaction_data_types: z.record(z.string(), zTransactionDataType),
   })
   .loose()

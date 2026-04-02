@@ -1,6 +1,6 @@
 {
-  "name": "@animo-id/eudi-wallet-ts12-resolver",
-  "description": "EUDI Wallet TS12 locale resolution and value type resolution",
+  "name": "@animo-id/eudi-wallet-ts12-credential-metadata-query",
+  "description": "EUDI Wallet TS12 credential metadata resolution — credo-ts module for resolving, verifying, storing, and renewing per Sections 4.1 and 5",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "author": "Frederic Artus Nieto for DSGV",
@@ -24,7 +24,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/animo/eudi-wallet-functionality",
-    "directory": "packages/resolver"
+    "directory": "packages/credential-metadata-query"
   },
   "scripts": {
     "types:check": "tsc --noEmit",
@@ -32,7 +32,10 @@
   },
   "dependencies": {
     "@animo-id/eudi-wallet-ts12-validation": "workspace:*",
-    "bcp-47-match": "^2.0.3"
+    "zod": "^4.3.5"
+  },
+  "peerDependencies": {
+    "@credo-ts/core": "*"
   },
   "devDependencies": {
     "tsdown": "^0.18.4",

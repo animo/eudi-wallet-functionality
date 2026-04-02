@@ -1,34 +1,8 @@
-/**
- * RFC 4647 Section 3.4 — Basic Lookup matching.
- *
- * Progressively truncates subtags from the end of `range` until an exact
- * case-insensitive match is found in `availableTags`.
- * When truncation leaves a single-character subtag at the end, that subtag
- * is also removed (it is an extension/private-use prefix per RFC 5646).
- *
- * Returns the original (un-lowered) tag from `availableTags`, or undefined.
- */
+import { lookup } from 'bcp-47-match'
+
+/** RFC 4647 Section 3.4 — Basic Lookup. Wraps bcp-47-match. */
 export function lookupLocale(range: string, availableTags: string[]): string | undefined {
-  let current = range.toLowerCase()
-  const lowered = availableTags.map((t) => t.toLowerCase())
-
-  while (current) {
-    const idx = lowered.indexOf(current)
-    if (idx !== -1) return availableTags[idx]
-
-    const dash = current.lastIndexOf('-')
-    if (dash === -1) break
-
-    current = current.substring(0, dash)
-
-    // If the new trailing subtag is a single character, remove it too
-    const nextDash = current.lastIndexOf('-')
-    if (nextDash !== -1 && current.length - nextDash - 1 === 1) {
-      current = current.substring(0, nextDash)
-    }
-  }
-
-  return undefined
+  return lookup(availableTags, [range]) || undefined
 }
 
 /**
@@ -44,15 +18,14 @@ export function lookupLocale(range: string, availableTags: string[]): string | u
  */
 export function selectLocaleEntry<T extends { locale?: string }>(entries: T[], locale: string): T | undefined {
   const tagged = entries.filter((e): e is T & { locale: string } => e.locale !== undefined)
-  const matched = lookupLocale(
-    locale,
-    tagged.map((e) => e.locale)
+  const matched = lookup(
+    tagged.map((e) => e.locale),
+    [locale]
   )
 
   if (matched) {
     return tagged.find((e) => e.locale.toLowerCase() === matched.toLowerCase())
   }
 
-  // Default entry: first entry without a locale field
   return entries.find((e) => e.locale === undefined)
 }

@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@animo-id/eudi-wallet-ts12-validation": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata-query": "workspace:*",
     "zod": "^4.3.5"
   }
 }

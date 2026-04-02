@@ -1,7 +1,7 @@
 import type { ResolvedTransactionDisplay } from '@animo-id/eudi-wallet-ts12-resolver'
 import { resolveTransactionDisplay, selectLocaleEntry } from '@animo-id/eudi-wallet-ts12-resolver'
 import type { ScaCredentialMetadata, ScaTransactionDataEntry } from '@animo-id/eudi-wallet-ts12-validation'
-import { isScaTransactionType } from '@animo-id/eudi-wallet-ts12-validation'
+import { defaultScaTypeMatcher } from '@animo-id/eudi-wallet-ts12-validation'
 import type {
   CredentialDisplayEntry,
   DcqlClaimsQuery,
@@ -19,15 +19,10 @@ import type {
 export function resolveCredentialDisplay(
   display: CredentialDisplayEntry[],
   locale: string,
-  config: WalletConfiguration
+  _config: WalletConfiguration
 ): ResolvedCredentialDisplay | undefined {
   const entry = selectLocaleEntry(display, locale)
   if (!entry) return undefined
-
-  const svg_template =
-    config.supportsSvgTemplates && entry.svg_templates && entry.svg_templates.length > 0
-      ? entry.svg_templates[0]
-      : undefined
 
   return {
     name: entry.name,
@@ -35,7 +30,6 @@ export function resolveCredentialDisplay(
     logo: entry.logo,
     background_color: entry.background_color,
     text_color: entry.text_color,
-    svg_template,
   }
 }
 
@@ -49,9 +43,10 @@ export function resolveFirstMatchScaTransactionData(
   locale: string,
   config: WalletConfiguration
 ): { index: number; entry: TransactionDataInput; resolved: ResolvedTransactionDisplay } | undefined {
+  const isScaType = config.scaTypeMatcher ?? defaultScaTypeMatcher
   for (let i = 0; i < transactionData.length; i++) {
     const td = transactionData[i]
-    if (!isScaTransactionType(td.type)) continue
+    if (!isScaType(td.type)) continue
     if (!td.credential_ids.includes(credentialQueryId)) continue
 
     const resolved = resolveTransactionDisplay(
@@ -80,9 +75,10 @@ export function findFirstNonScaTransactionData(
 ): { index: number; entry: TransactionDataInput } | undefined {
   if (!config.checkNonScaTransactionDataSupport) return undefined
 
+  const isScaType = config.scaTypeMatcher ?? defaultScaTypeMatcher
   for (let i = 0; i < transactionData.length; i++) {
     const td = transactionData[i]
-    if (isScaTransactionType(td.type)) continue
+    if (isScaType(td.type)) continue
     if (!td.credential_ids.includes(credentialQueryId)) continue
     if (!config.checkNonScaTransactionDataSupport(credentialId, td.type)) continue
     return { index: i, entry: td }
@@ -129,9 +125,10 @@ export function canResolveCredentialForLocale(
     if (!selectLocaleEntry(credential.display, locale)) return false
   }
 
+  const isScaType = config.scaTypeMatcher ?? defaultScaTypeMatcher
   if (credential.scaMetadata) {
     const hasScaEntry = transactionData.some(
-      (td) => isScaTransactionType(td.type) && td.credential_ids.includes(credentialQueryId)
+      (td) => isScaType(td.type) && td.credential_ids.includes(credentialQueryId)
     )
     if (hasScaEntry) {
       if (
