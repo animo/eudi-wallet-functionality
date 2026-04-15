@@ -1,6 +1,6 @@
 {
-  "name": "@animo-id/eudi-wallet-ts12-credential-metadata-provider",
-  "description": "EUDI Wallet TS12 credential metadata provider — create and serve signed per-credential metadata JWTs per Section 5",
+  "name": "@animo-id/eudi-wallet-ts12-credential-metadata-wallet",
+  "description": "EUDI Wallet TS12 credential metadata handling — framework-agnostic service for resolving, verifying, storing, renewing, and auditing per Sections 4.1, 5, and 8.3",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "author": "Frederic Artus Nieto for DSGV",
@@ -24,7 +24,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/animo/eudi-wallet-functionality",
-    "directory": "packages/credential-metadata-provider"
+    "directory": "packages/credential-metadata-wallet"
   },
   "scripts": {
     "types:check": "tsc --noEmit",
@@ -33,8 +33,7 @@
   "dependencies": {
     "@animo-id/eudi-wallet-ts12-credential-metadata": "workspace:*",
     "@animo-id/eudi-wallet-ts12-validation": "workspace:*",
-    "@hapi/accept": "^6.0.3",
-    "bcp-47-match": "^2.0.3"
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "tsdown": "^0.18.4",

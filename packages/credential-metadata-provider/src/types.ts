@@ -1,4 +1,7 @@
+import type { JwtSigner } from '@animo-id/eudi-wallet-ts12-credential-metadata'
 import type { CredentialMetadata } from '@animo-id/eudi-wallet-ts12-validation'
+
+export type { JwtSigner } from '@animo-id/eudi-wallet-ts12-credential-metadata'
 
 /** Lightweight credential identity — no heavy metadata payload. */
 export interface CredentialInfo {
@@ -32,16 +35,6 @@ export interface CredentialMetadataStore {
   /** Persist a signed JWT for a credential + canonical locale key. */
   saveSignedJwt(credentialId: string, canonicalLocale: string, jwt: string): Promise<void>
 }
-
-/**
- * Signs a credential-metadata+jwt given its payload.
- *
- * The signer owns all cryptographic details: key material, algorithm,
- * certificate chain, and JOSE header construction. It MUST set
- * `typ: 'credential-metadata+jwt'` and include `x5c` in the protected header
- * per TS12 Section 5.
- */
-export type JwtSigner = (payload: Record<string, unknown>) => Promise<string>
 
 /**
  * Selects which locales to filter the metadata to, given the requested locales

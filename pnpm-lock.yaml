@@ -8,9 +8,21 @@ importers:
 
   .:
     dependencies:
-      '@animo-id/eudi-wallet-ts12-credential-metadata-query':
+      '@animo-id/eudi-wallet-ts12-credential-metadata':
         specifier: workspace:*
-        version: link:packages/credential-metadata-query
+        version: link:packages/credential-metadata
+      '@animo-id/eudi-wallet-ts12-credential-metadata-provider':
+        specifier: workspace:*
+        version: link:packages/credential-metadata-provider
+      '@animo-id/eudi-wallet-ts12-credential-metadata-provider-credo':
+        specifier: workspace:*
+        version: link:packages/credential-metadata-provider-credo
+      '@animo-id/eudi-wallet-ts12-credential-metadata-wallet':
+        specifier: workspace:*
+        version: link:packages/credential-metadata-wallet
+      '@animo-id/eudi-wallet-ts12-credential-metadata-wallet-credo':
+        specifier: workspace:*
+        version: link:packages/credential-metadata-wallet-credo
       '@animo-id/eudi-wallet-ts12-validation':
         specifier: workspace:*
         version: link:packages/validation
@@ -52,8 +64,23 @@ importers:
         specifier: ~5.9.3
         version: 5.9.3
 
+  packages/credential-metadata:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.15.29
+        version: 22.19.3
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
   packages/credential-metadata-provider:
     dependencies:
+      '@animo-id/eudi-wallet-ts12-credential-metadata':
+        specifier: workspace:*
+        version: link:../credential-metadata
       '@animo-id/eudi-wallet-ts12-validation':
         specifier: workspace:*
         version: link:../validation
@@ -63,6 +90,28 @@ importers:
       bcp-47-match:
         specifier: ^2.0.3
         version: 2.0.3
+    devDependencies:
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/credential-metadata-provider-credo:
+    dependencies:
+      '@animo-id/eudi-wallet-ts12-credential-metadata':
+        specifier: workspace:*
+        version: link:../credential-metadata
+      '@animo-id/eudi-wallet-ts12-credential-metadata-provider':
+        specifier: workspace:*
+        version: link:../credential-metadata-provider
+      '@animo-id/eudi-wallet-ts12-validation':
+        specifier: workspace:*
+        version: link:../validation
+      '@credo-ts/core':
+        specifier: '*'
+        version: 0.6.1(typescript@5.9.3)
     devDependencies:
       tsdown:
         specifier: ^0.18.4
@@ -82,6 +131,44 @@ importers:
       zod:
         specifier: ^4.3.5
         version: 4.3.5
+    devDependencies:
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/credential-metadata-wallet:
+    dependencies:
+      '@animo-id/eudi-wallet-ts12-credential-metadata':
+        specifier: workspace:*
+        version: link:../credential-metadata
+      '@animo-id/eudi-wallet-ts12-validation':
+        specifier: workspace:*
+        version: link:../validation
+      zod:
+        specifier: ^4.3.5
+        version: 4.3.5
+    devDependencies:
+      tsdown:
+        specifier: ^0.18.4
+        version: 0.18.4(typescript@5.9.3)
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+
+  packages/credential-metadata-wallet-credo:
+    dependencies:
+      '@animo-id/eudi-wallet-ts12-credential-metadata':
+        specifier: workspace:*
+        version: link:../credential-metadata
+      '@animo-id/eudi-wallet-ts12-credential-metadata-wallet':
+        specifier: workspace:*
+        version: link:../credential-metadata-wallet
+      '@credo-ts/core':
+        specifier: '*'
+        version: 0.6.1(typescript@5.9.3)
     devDependencies:
       tsdown:
         specifier: ^0.18.4
@@ -860,6 +947,7 @@ packages:
 
   '@sphereon/kmp-mdoc-core@0.2.0-SNAPSHOT.26':
     resolution: {integrity: sha512-QXJ6R8ENiZV2rPMbn06cw5JKwqUYN1kzVRbYfONqE1PEXx1noQ4md7uxr2zSczi0ubKkNcbyYDNtIMTZIhGzmQ==}
+    bundledDependencies: []
 
   '@sphereon/pex-models@2.3.2':
     resolution: {integrity: sha512-foFxfLkRwcn/MOp/eht46Q7wsvpQGlO7aowowIIb5Tz9u97kYZ2kz6K2h2ODxWuv5CRA7Q0MY8XUBGE2lfOhOQ==}

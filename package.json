@@ -54,7 +54,11 @@
   },
   "dependencies": {
     "@animo-id/eudi-wallet-ts12-validation": "workspace:*",
-    "@animo-id/eudi-wallet-ts12-credential-metadata-query": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata-wallet": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata-provider": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata-provider-credo": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata-wallet-credo": "workspace:*",
     "zod": "^4.3.5"
   }
 }

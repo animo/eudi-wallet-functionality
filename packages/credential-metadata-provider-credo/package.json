@@ -1,6 +1,6 @@
 {
-  "name": "@animo-id/eudi-wallet-ts12-credential-metadata-provider",
-  "description": "EUDI Wallet TS12 credential metadata provider — create and serve signed per-credential metadata JWTs per Section 5",
+  "name": "@animo-id/eudi-wallet-ts12-credential-metadata-provider-credo",
+  "description": "EUDI Wallet TS12 credential metadata provider — Credo-ts module, JwtSigner adapter, and Express router for serving signed credential metadata per Section 5",
   "version": "0.1.0",
   "license": "Apache-2.0",
   "author": "Frederic Artus Nieto for DSGV",
@@ -24,7 +24,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/animo/eudi-wallet-functionality",
-    "directory": "packages/credential-metadata-provider"
+    "directory": "packages/credential-metadata-provider-credo"
   },
   "scripts": {
     "types:check": "tsc --noEmit",
@@ -32,9 +32,11 @@
   },
   "dependencies": {
     "@animo-id/eudi-wallet-ts12-credential-metadata": "workspace:*",
-    "@animo-id/eudi-wallet-ts12-validation": "workspace:*",
-    "@hapi/accept": "^6.0.3",
-    "bcp-47-match": "^2.0.3"
+    "@animo-id/eudi-wallet-ts12-credential-metadata-provider": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-validation": "workspace:*"
+  },
+  "peerDependencies": {
+    "@credo-ts/core": "*"
   },
   "devDependencies": {
     "tsdown": "^0.18.4",

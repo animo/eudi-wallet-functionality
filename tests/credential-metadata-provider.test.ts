@@ -130,7 +130,10 @@ function makeStore() {
   }
 }
 
-const fakeSigner = async (payload: Record<string, unknown>) => `header.${btoa(JSON.stringify(payload))}.signature`
+const fakeSigner = {
+  x5c: ['MIIBxTCCAWugAwIBAgent...'],
+  sign: async (payload: Record<string, unknown>) => `header.${btoa(JSON.stringify(payload))}.signature`,
+}
 
 function makeProvider() {
   return new CredentialMetadataProvider({

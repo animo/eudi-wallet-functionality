@@ -102,7 +102,7 @@ export class CredentialMetadataProvider {
       credential_metadata: filteredMetadata,
     }
 
-    const jwt = await this.config.signer(payload)
+    const jwt = await this.config.signer.sign(payload)
     await store.saveSignedJwt(credentialId, localeKey, jwt)
 
     return jwtResponse(jwt)
