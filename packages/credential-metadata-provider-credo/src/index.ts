@@ -1,0 +1,5 @@
+export { CredentialMetadataProviderApi } from './credential-metadata-provider-api'
+export { CredentialMetadataProviderModule } from './credential-metadata-provider-module'
+export { createCredoJwtSigner, type CredoJwtSignerOptions } from './credo-jwt-signer'
+export { createInMemoryCredentialMetadataStore, type CredentialRegistration } from './in-memory-store'
+export { createCredentialMetadataHandler, type CredentialMetadataRouterHandler } from './credential-metadata-router'

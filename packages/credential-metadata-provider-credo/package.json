@@ -1,0 +1,45 @@
+{
+  "name": "@animo-id/eudi-wallet-ts12-credential-metadata-provider-credo",
+  "description": "EUDI Wallet TS12 credential metadata provider — Credo-ts module, JwtSigner adapter, and Express router for serving signed credential metadata per Section 5",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "author": "Frederic Artus Nieto for DSGV",
+  "exports": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.mjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/animo/eudi-wallet-functionality",
+    "directory": "packages/credential-metadata-provider-credo"
+  },
+  "scripts": {
+    "types:check": "tsc --noEmit",
+    "build": "tsdown src/index.ts --format esm --dts --clean --sourcemap"
+  },
+  "dependencies": {
+    "@animo-id/eudi-wallet-ts12-credential-metadata": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-credential-metadata-provider": "workspace:*",
+    "@animo-id/eudi-wallet-ts12-validation": "workspace:*"
+  },
+  "peerDependencies": {
+    "@credo-ts/core": "*"
+  },
+  "devDependencies": {
+    "tsdown": "^0.18.4",
+    "typescript": "~5.9.3"
+  }
+}

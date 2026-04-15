@@ -1,0 +1,40 @@
+{
+  "name": "@animo-id/eudi-wallet-ts12-validation",
+  "description": "EUDI Wallet TS12 transaction data and metadata validation schemas",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "author": "Frederic Artus Nieto for DSGV",
+  "exports": "./src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.mjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
+    "exports": {
+      ".": "./dist/index.mjs",
+      "./package.json": "./package.json"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/animo/eudi-wallet-functionality",
+    "directory": "packages/validation"
+  },
+  "scripts": {
+    "types:check": "tsc --noEmit",
+    "build": "tsdown src/index.ts --format esm --dts --clean --sourcemap"
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "tsdown": "^0.18.4",
+    "typescript": "~5.9.3"
+  }
+}
