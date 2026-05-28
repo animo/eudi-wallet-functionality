@@ -1,32 +1,31 @@
-import assert from 'node:assert'
-import { describe, it } from 'node:test'
+import { describe, expect, it } from 'vitest'
 import { mergeJson } from '../src/merge-json'
 
 describe('mergeJson', () => {
   describe('Primitives', () => {
     it('should replace primitives', () => {
-      assert.strictEqual(mergeJson(1, 2), 2)
-      assert.strictEqual(mergeJson('a', 'b'), 'b')
-      assert.strictEqual(mergeJson(true, false), false)
+      expect(mergeJson(1, 2)).toBe(2)
+      expect(mergeJson('a', 'b')).toBe('b')
+      expect(mergeJson(true, false)).toBe(false)
     })
 
     it('should throw error when setting non-nullable to null', () => {
-      assert.throws(() => mergeJson(1, null), /cannot set non-nullable value to null/)
+      expect(() => mergeJson(1, null)).toThrow(/cannot set non-nullable value to null/)
     })
 
     it('should allow setting null to value', () => {
-      assert.strictEqual(mergeJson(null, 1), 1)
+      expect(mergeJson(null, 1)).toBe(1)
     })
 
     it('should handle undefined', () => {
-      assert.strictEqual(mergeJson(1, undefined), 1)
-      assert.strictEqual(mergeJson(undefined, 1), 1)
+      expect(mergeJson(1, undefined)).toBe(1)
+      expect(mergeJson(undefined, 1)).toBe(1)
     })
 
     it('should throw error on mismatched types', () => {
-      assert.throws(() => mergeJson({ a: 1 }, 2), /Type mismatch/)
-      assert.throws(() => mergeJson([1], { a: 1 }), /Type mismatch/)
-      assert.throws(() => mergeJson(1, 'a'), /Type mismatch/)
+      expect(() => mergeJson({ a: 1 }, 2)).toThrow(/Type mismatch/)
+      expect(() => mergeJson([1], { a: 1 })).toThrow(/Type mismatch/)
+      expect(() => mergeJson(1, 'a')).toThrow(/Type mismatch/)
     })
   })
 
@@ -34,20 +33,20 @@ describe('mergeJson', () => {
     it('should merge objects by default', () => {
       const target = { a: 1, b: 2 }
       const source = { b: 3, c: 4 }
-      assert.deepStrictEqual(mergeJson(target, source), { a: 1, b: 3, c: 4 })
+      expect(mergeJson(target, source)).toEqual({ a: 1, b: 3, c: 4 })
     })
 
     it('should recursively merge objects', () => {
       const target = { a: { x: 1, y: 2 } }
       const source = { a: { y: 3, z: 4 } }
-      assert.deepStrictEqual(mergeJson(target, source), { a: { x: 1, y: 3, z: 4 } })
+      expect(mergeJson(target, source)).toEqual({ a: { x: 1, y: 3, z: 4 } })
     })
 
     it('should replace objects if configured', () => {
       const target = { a: { x: 1 } }
       const source = { a: { y: 2 } }
       const config = { objectStrategy: 'replace' as const }
-      assert.deepStrictEqual(mergeJson(target, source, config), { a: { y: 2 } })
+      expect(mergeJson(target, source, config)).toEqual({ a: { y: 2 } })
     })
 
     it('should replace specific fields if configured', () => {
@@ -58,7 +57,7 @@ describe('mergeJson', () => {
           a: { strategy: 'replace' as const },
         },
       }
-      assert.deepStrictEqual(mergeJson(target, source, config), {
+      expect(mergeJson(target, source, config)).toEqual({
         a: { y: 2 },
         b: { x: 1, y: 2 },
       })
@@ -69,21 +68,21 @@ describe('mergeJson', () => {
     it('should replace arrays by default', () => {
       const target = [1, 2]
       const source = [3, 4]
-      assert.deepStrictEqual(mergeJson(target, source), [3, 4])
+      expect(mergeJson(target, source)).toEqual([3, 4])
     })
 
     it('should append arrays if configured', () => {
       const target = [1, 2]
       const source = [3, 4]
       const config = { arrayStrategy: 'append' as const }
-      assert.deepStrictEqual(mergeJson(target, source, config), [1, 2, 3, 4])
+      expect(mergeJson(target, source, config)).toEqual([1, 2, 3, 4])
     })
 
     it('should merge arrays by index if configured', () => {
       const target = [{ id: 1, val: 'a' }, { id: 2 }]
       const source = [{ val: 'b' }]
       const config = { arrayStrategy: 'merge' as const }
-      assert.deepStrictEqual(mergeJson(target, source, config), [{ id: 1, val: 'b' }, { id: 2 }])
+      expect(mergeJson(target, source, config)).toEqual([{ id: 1, val: 'b' }, { id: 2 }])
     })
 
     it('should merge arrays by discriminant (single key)', () => {
@@ -99,7 +98,7 @@ describe('mergeJson', () => {
         arrayStrategy: 'merge' as const,
         arrayDiscriminant: 'id',
       }
-      assert.deepStrictEqual(mergeJson(target, source, config), [
+      expect(mergeJson(target, source, config)).toEqual([
         { id: 1, val: 'a' },
         { id: 2, val: 'c' },
         { id: 3, val: 'd' },
@@ -119,7 +118,7 @@ describe('mergeJson', () => {
         arrayStrategy: 'merge' as const,
         arrayDiscriminant: ['type', 'subtype'],
       }
-      assert.deepStrictEqual(mergeJson(target, source, config), [
+      expect(mergeJson(target, source, config)).toEqual([
         { type: 'A', subtype: '1', val: 'z' },
         { type: 'A', subtype: '2', val: 'y' },
         { type: 'B', subtype: '1', val: 'w' },
@@ -142,7 +141,7 @@ describe('mergeJson', () => {
         arrayStrategy: 'merge' as const,
         arrayDiscriminant: ['type', 'subtype'],
       }
-      assert.deepStrictEqual(mergeJson(target, source, config), [
+      expect(mergeJson(target, source, config)).toEqual([
         { type: 'A', subtype: '1', val: 'x-updated' },
         { type: 'A', val: 'y-updated' },
         { type: 'B', subtype: undefined, val: 'z-updated' },
@@ -166,7 +165,7 @@ describe('mergeJson', () => {
         },
       }
 
-      assert.deepStrictEqual(mergeJson(target, source, config), {
+      expect(mergeJson(target, source, config)).toEqual({
         items: [
           { id: 1, tags: ['b'] }, // tags replaced
         ],
@@ -180,16 +179,16 @@ describe('mergeJson', () => {
       const source = { a: { c: 2 } }
       const result = mergeJson(target, source)
 
-      assert.notStrictEqual(result, target)
-      assert.deepStrictEqual(target, { a: { b: 1 } })
-      assert.deepStrictEqual(result, { a: { b: 1, c: 2 } })
+      expect(result).not.toBe(target)
+      expect(target).toEqual({ a: { b: 1 } })
+      expect(result).toEqual({ a: { b: 1, c: 2 } })
     })
 
     it('should handle null values correctly', () => {
       const target = { a: 1, b: { c: 2 } }
       const source = { a: null, b: null }
       // Expect error because target.a is 1 (non-null) and source.a is null
-      assert.throws(() => mergeJson(target, source), /cannot set non-nullable value to null/)
+      expect(() => mergeJson(target, source)).toThrow(/cannot set non-nullable value to null/)
     })
 
     it('should handle complex nested structure with discriminants', () => {
@@ -224,12 +223,12 @@ describe('mergeJson', () => {
 
       const result = mergeJson(target, source, config)
 
-      assert.deepStrictEqual(result.users[0].profile, {
+      expect(result.users[0].profile).toEqual({
         name: 'Alice',
         settings: { theme: 'dark', notifications: true },
       })
-      assert.deepStrictEqual(result.users[0].roles, ['editor']) // Default is replace
-      assert.strictEqual(result.users[1].id, 2)
+      expect(result.users[0].roles).toEqual(['editor']) // Default is replace
+      expect(result.users[1].id).toBe(2)
     })
   })
 })
