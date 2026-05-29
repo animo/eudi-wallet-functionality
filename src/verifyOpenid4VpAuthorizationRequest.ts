@@ -50,8 +50,8 @@ export const verifyOpenid4VpAuthorizationRequest = async (
         }
       }
 
-      if (jwt.header.typ !== 'rc-rp+jwt') {
-        throw new Error(`only 'rc-rp+jwt' is supported as header typ. Request included: ${jwt.header.typ}`)
+      if (jwt.header.typ !== 'rc-wrp+jwt') {
+        throw new Error(`only 'rc-wrp+jwt' is supported as header typ. Request included: ${jwt.header.typ}`)
       }
 
       if (!signedAuthorizationRequest) {
@@ -64,7 +64,7 @@ export const verifyOpenid4VpAuthorizationRequest = async (
 
       const registrationCertificateHeaderSchema = z
         .object({
-          typ: z.literal('rc-rp+jwt'),
+          typ: z.literal('rc-wrp+jwt'),
           alg: z.string(),
           // sprin-d did not define this
           x5u: z.url().optional(),

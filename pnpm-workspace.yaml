@@ -1,0 +1,7 @@
+ignoredBuiltDependencies:
+  - cbor-extract
+  - esbuild
+
+onlyBuiltDependencies:
+  - '@openwallet-foundation/askar-nodejs'
+  - koffi
